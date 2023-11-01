@@ -1,70 +1,178 @@
+import { EpochMilliseconds, Milliseconds, durationUtil } from 'epdoc-timeutil';
+import {
+  Dict,
+  Integer,
+  isArray,
+  isDict,
+  isInteger,
+  isNonEmptyArray,
+  isNonEmptyString,
+} from 'epdoc-util';
+
 const TIMEOUTS = [2500, 13000, 13000];
 
+export type EntityShortId = string;
+/**
+ * IP Address or hostname
+ */
+export type HOST = string;
+
+export type InputPingData = {
+  timeout: Milliseconds;
+  hosts: string | string[];
+};
+export type RoundIndex = Integer;
+export type RoundsData = {
+  timeout: Milliseconds;
+  hosts: string | string[];
+  responses: Integer;
+};
+
+export type OutputPingData = {};
+
+export type InputPayload = {
+  debug?: boolean;
+  name: string;
+  id: EntityShortId;
+  data: InputPingData[];
+};
+
+export type FlowReport = {
+  id: EntityShortId;
+  name: string;
+  down_count?: Integer;
+  start_date?: EpochMilliseconds;
+  last_alive_at?: EpochMilliseconds;
+  end_date?: EpochMilliseconds;
+  down_time?: Milliseconds;
+  friendly_down_time?: string;
+  max_down_time?: Milliseconds;
+  friendly_max_down_time?: string;
+  host?: HOST;
+};
+
+export type FlowContextShort = {
+  debug: boolean;
+  id: EntityShortId;
+  name: string;
+  busy: boolean;
+  busyAt: EpochMilliseconds;
+  startDate: EpochMilliseconds;
+  rounds: RoundsData[];
+};
+export type FlowContextLong = {
+  down: boolean;
+  downAt?: EpochMilliseconds;
+  lastAliveAt?: EpochMilliseconds;
+  count: Integer;
+};
+export type FlowContextData = {
+  short: FlowContextShort;
+  long: FlowContextLong;
+};
+
+export type EnvKey = string;
+export type FlowKey = string;
+export type FlowType = 'file' | 'memory';
+export type FlowContextOpts = {
+  env: {
+    get: (key: EnvKey) => any;
+  };
+  flow: {
+    get: (key: FlowKey, type?: FlowType) => Dict;
+    set: (key: FlowKey, data: any, type?: FlowType) => void;
+  };
+  node: {
+    warn: (msg: string) => void;
+    error: (msg: string) => void;
+  };
+};
+
 export class FlowContext {
-  private _FLOW = {
+  private _FLOW: Dict = {
     short: 'short',
     long: 'long',
   };
-  private _ctx = {
-    short: {},
-    long: {},
-  };
+  private _ctx: FlowContextData;
+  private _opts: FlowContextOpts;
 
-  constructor() {
-    this._ctx = { short: {}, long: {} };
+  constructor(opts: FlowContextOpts, payload: InputPayload) {
+    this._opts = opts;
+    if (payload) {
+      this._ctx = this.initFromPayload(payload);
+    } else {
+      this._ctx = this.initFromStorage();
+    }
+    // this._ctx = { short: {}, long: { down: false } };
   }
 
-  initFromPayload(payload: Dict) {
-    const id = payload.id || env.get('AN_ID');
+  get env() {
+    return this._opts.env;
+  }
+
+  get flow() {
+    return this._opts.flow;
+  }
+  get node() {
+    return this._opts.node;
+  }
+  get short() {
+    return this._ctx.short;
+  }
+  get long() {
+    return this._ctx.long;
+  }
+
+  initFromPayload(payload: InputPayload): FlowContextData {
+    const id = payload.id || this.env.get('AN_ID');
     const tNowMs = new Date().getTime();
-    this._ctx = {
+    const ctx: FlowContextData = {
       short: {
-        debug: payload.debug || env.get('AN_DEBUG') ? true : false,
+        debug: payload.debug || this.env.get('AN_DEBUG') ? true : false,
         id: id,
-        name: payload.name || env.get('AN_NAME'),
+        name: payload.name || this.env.get('AN_NAME'),
         busy: true,
         busyAt: tNowMs,
         startDate: tNowMs, // The time when we entered this flow, NOT when we went down
-        pingHasResponded: [false, false],
-        rounds: this._initRounds(payload.data || [env.get('AN_HOSTS0'), env.get('AN_HOSTS1')]),
+        rounds: this._initRounds(
+          payload.data || [this.env.get('AN_HOSTS0'), this.env.get('AN_HOSTS1')],
+        ),
       },
-      long: flow.get(this._FLOW.long, 'file'),
+      long: this.flow.get(this._FLOW.long, 'file') as FlowContextLong,
     };
-    if (u.isNonEmptyArray(payload.timeout) && payload.timeout.length === 2) {
-      this._ctx.short.timeout = payload.timeout;
-    }
-    return this._saveShort();
+    this._saveShort();
+    return ctx;
   }
 
-  _initRounds(arr) {
-    const results = [];
+  _initRounds(arr: InputPingData[]): RoundsData[] {
+    const results: RoundsData[] = [];
     for (let idx = 0; idx < arr.length; ++idx) {
-      const item = arr[idx];
-      let result;
-      let timeout;
-      if (u.isArray(item)) {
+      const item: InputPingData = arr[idx];
+      let result: HOST[] = [];
+      let timeout: Milliseconds = 0;
+      if (isArray(item)) {
         result = item;
-      } else if (u.isNonEmptyString(item)) {
+      } else if (isNonEmptyString(item)) {
         result = this.commaList(item);
-      } else if (u.isDict(item) && u.isArray(item.hosts)) {
-        if (u.isInteger(item.timeout)) {
+      } else if (isDict(item) && isArray(item.hosts)) {
+        if (isInteger(item.timeout)) {
           timeout = item.timeout;
         }
-        if (u.isArray(item.hosts)) {
+        if (isArray(item.hosts)) {
           result = item.hosts;
-        } else if (u.isNonEmptyString(item.hosts)) {
+        } else if (isNonEmptyString(item.hosts)) {
           result = this.commaList(item.hosts);
         }
       }
-      if (u.isNonEmptyArray(result)) {
-        let filtered = [];
+      if (isNonEmptyArray(result)) {
+        let filtered: HOST[] = [];
         result.forEach((r) => {
-          if (u.isNonEmptyString(r)) {
+          if (isNonEmptyString(r)) {
             filtered.push(r);
           }
         });
         if (filtered.length) {
-          const item = {
+          const item: RoundsData = {
             hosts: filtered,
             timeout: timeout ? timeout : TIMEOUTS[idx],
             responses: 0,
@@ -72,123 +180,124 @@ export class FlowContext {
           results.push(item);
         }
       } else {
-        node.error('IP Addresses or hostnames not configured correctly');
+        this.node.error('IP Addresses or hostnames not configured correctly');
       }
     }
     if (results.length < 2) {
-      node.error('IP Addresses or hostnames not configured correctly');
+      this.node.error('IP Addresses or hostnames not configured correctly');
     }
     return results;
   }
 
-  commaList(s) {
+  commaList(s: string): string[] {
     return s.split(',').map((item) => {
       return item.trim();
     });
   }
 
-  initFromStorage() {
-    this._ctx = {
-      short: flow.get(this._FLOW.short),
-      long: flow.get(this._FLOW.long, 'file'),
+  initFromStorage(): FlowContextData {
+    const ctx: FlowContextData = {
+      short: this.flow.get(this._FLOW.short) as FlowContextShort,
+      long: this.flow.get(this._FLOW.long, 'file') as FlowContextLong,
     };
-    return this;
+    return ctx;
   }
 
   _saveShort() {
-    flow.set(this._FLOW.short, this._ctx.short);
+    this.flow.set(this._FLOW.short, this.short);
     return this;
   }
 
-  getRound(round) {
-    return this._ctx.short.rounds[round];
+  getRound(round: RoundIndex): RoundsData {
+    return this.short.rounds ? this.short.rounds[round] : ({} as RoundsData);
   }
-  getHost(round) {
+  getHost(round: RoundIndex): HOST | HOST[] {
     return this.getRound(round).hosts;
   }
-  get name() {
-    return this._ctx.short && this._ctx.short.name;
+  get name(): string | undefined {
+    return this.short.name;
   }
-  get busy() {
-    return this._ctx.short && this._ctx.short.busy === true;
+  get busy(): boolean {
+    return this.short.busy === true;
   }
-  setBusy(val) {
-    this._ctx.short.busy = val;
+  setBusy(val: boolean = true) {
+    this.short.busy = val;
     return this._saveShort();
   }
   clearBusy() {
-    this._ctx.short.busy = false;
+    this.short.busy = false;
     return this._saveShort();
   }
   busyTimeout() {
-    if (!this._ctx.short.busyAt) {
+    if (!this.short.busyAt) {
       return true;
     }
     const tNowMs = new Date().getTime();
-    if (
-      tNowMs - this._ctx.short.busyAt >
-      this._ctx.short.timeout[0] + this._ctx.short.timeout[1] + 1000
-    ) {
+    if (tNowMs - this.short.busyAt > this.short.timeout[0] + this.short.timeout[1] + 1000) {
       return true;
     }
     return false;
   }
 
-  getPingHasResponded(round) {
+  getPingHasResponded(round: RoundIndex): boolean {
     const item = this.getRound(round);
     return item.responses > 0;
   }
-  getPingAllResponded(round) {
+  getPingAllResponded(round: RoundIndex): boolean {
     const item = this.getRound(round);
     return item.responses == item.hosts.length;
   }
-  incPingHasResponded(round) {
+  incPingHasResponded(round: RoundIndex): FlowContext {
     let item = this.getRound(round);
     item.responses = item.responses + 1;
     return this._saveShort();
   }
 
-  firstRound(round) {
+  firstRound(round: RoundIndex): boolean {
     return round === 0;
   }
-  finalRound(round) {
-    return round >= this._ctx.short.hosts.length - 1;
+  finalRound(round: RoundIndex): boolean {
+    if (this.short.rounds) {
+      return round >= this.short.rounds.length - 1;
+    }
+    return true;
   }
 
-  get debug() {
-    return this._ctx.short && this._ctx.short.debug === true;
+  get debug(): boolean {
+    return this.short.debug === true;
   }
 
-  get startDate() {
-    return this._ctx.short && this._ctx.short.startDate;
+  get startDate(): EpochMilliseconds {
+    return this.short.startDate;
   }
-  setStartDate(val) {
-    this._ctx.short.startDate = val;
+  setStartDate(val: EpochMilliseconds) {
+    this.short.startDate = val;
     return this._saveShort();
   }
-  isUp() {
+  isUp(): boolean {
     return this.isDown() ? false : true;
   }
-  isDown() {
-    return this._ctx && this._ctx.long && this._ctx.long.down == true;
+  isDown(): boolean {
+    return this.long.down == true;
   }
-  downAt() {
-    return this._ctx && this._ctx.long && this._ctx.long.downAt;
+  downAt(): EpochMilliseconds {
+    return this.long.downAt || 0;
   }
-  lastAliveAt() {
-    return this._ctx && this._ctx.long && this._ctx.long.lastAliveAt;
+  lastAliveAt(): EpochMilliseconds | undefined {
+    return this.long.lastAliveAt;
   }
-  setUp(tMs) {
+  setUp(tMs: EpochMilliseconds): FlowContext {
     this._ctx.long = {
       down: false,
+      count: 1, // XXXX
     };
     if (tMs) {
-      this._ctx.long.lastAliveAt = tMs;
+      this.long.lastAliveAt = tMs;
     }
     return this._saveLong();
   }
 
-  setDownAt(downAtMs) {
+  setDownAt(downAtMs: EpochMilliseconds) {
     let tMs = downAtMs ? downAtMs : new Date().getTime();
     this._ctx.long = {
       down: true,
@@ -202,20 +311,20 @@ export class FlowContext {
    * This counts how many times this flow has been run before we get a response
    */
   incrementDownCounter() {
-    this._ctx.long.count = this._ctx.long.count + 1;
+    this.long.count = this.long.count + 1;
     return this._saveLong();
   }
   get count() {
-    return this._ctx.long.count;
+    return this.long.count;
   }
 
   _saveLong() {
-    flow.set(this._FLOW.long, this._ctx.long, 'file');
+    this.flow.set(this._FLOW.long, this.long, 'file');
     return this;
   }
 
-  durationString(tMs) {
-    return ut.durationUtil(tMs, {}).format();
+  durationString(tMs: EpochMilliseconds) {
+    return durationUtil(tMs, { ms: 1 }).format();
   }
 
   connectionStatusAsString() {
@@ -224,34 +333,34 @@ export class FlowContext {
       s += 'up';
     } else {
       const tNowMs = new Date().getTime();
-      const tDiff = ut.durationUtil(tNowMs - this.downAt(), {}).format();
+      const tDiff = durationUtil(tNowMs - this.downAt(), {}).format();
       s += 'down for ' + tDiff;
     }
     return s;
   }
 
   // pingPrimaryPayload(timeout) {
-  //     return this.pingPayload(this._ctx.short.ipPrimary, timeout)
+  //     return this.pingPayload(this.short.ipPrimary, timeout)
   // }
   // pingSecondaryPayload(timeout) {
-  //     return this.pingPayload(this._ctx.short.ipSecondary, timeout)
+  //     return this.pingPayload(this.short.ipSecondary, timeout)
   // }
 
-  _pingPayloadItem(host, timeout, tStartMs, round) {
+  _pingPayloadItem(host, timeout, tStartMs, round): FlowReport {
     return {
       host: host,
       timeout: timeout,
       start_date: tStartMs,
-      id: this._ctx.short.id,
-      name: this._ctx.short.name,
+      id: this.short.id,
+      name: this.short.name,
       round: round,
     };
   }
 
-  pingPayload(round) {
+  pingPayload(round: RoundIndex) {
     const item = this.getRound(round);
     const tStartMs = new Date().getTime();
-    let result = [];
+    let result: FlowReport[] = [];
     item.hosts.forEach((host) => {
       result.push(this._pingPayloadItem(host, item.timeout, tStartMs, round));
     });
@@ -263,9 +372,9 @@ export class FlowContext {
    */
   getReportPayload(tEndMs, ping) {
     let result = {
-      id: this._ctx.short.id,
-      name: this._ctx.short.name,
-      down_count: this._ctx.long.count,
+      id: this.short.id,
+      name: this.short.name,
+      down_count: this.long.count,
     };
     if ((this.isDown() && ping && ping.round === 0) || tEndMs) {
       result.start_date = this.downAt();
@@ -292,13 +401,13 @@ export class FlowContext {
 }
 
 const lib = {
-  newFlowContext: () => {
-    return new FlowContext();
+  newFlowContext: (opts: FlowContextOpts) => {
+    return new FlowContext(opts);
   },
-  newFromStorage: () => {
-    return new FlowContext().initFromStorage();
+  newFromStorage: (opts: FlowContextOpts) => {
+    return new FlowContext(opts).initFromStorage();
   },
 };
-flow.set('lib', lib);
+// flow.set('lib', lib);
 
-return msg;
+// return msg;
