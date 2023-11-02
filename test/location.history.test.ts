@@ -13,7 +13,7 @@ describe('LocationHistory', () => {
   const LOCATIONS = [];
 
   describe('basic', () => {
-    let history = new LocationHistory(mock.opts);
+    let history = new LocationHistory({ context: 'flow' }, mock.opts);
     it('find none', () => {
       let f = history.filter('bob');
       expect(f.found()).toEqual(false);
@@ -172,19 +172,19 @@ describe('LocationHistory', () => {
       expect(filter.numFound()).toEqual(0);
     });
     it('pre flush raw', () => {
-      expect(mock.db.gate_history).toBeUndefined();
+      expect(mock.db.flow.gate_history).toBeUndefined();
     });
-    it.todo('flush raw', () => {
+    it('flush raw', () => {
       history.add('bob', g(2), tNow + 6000);
       history.flush();
-      expect(mock.db.gate_history).toBeDefined();
-      expect(mock.db.gate_history.bob).toHaveLength(2);
+      expect(mock.db.flow.gate_history).toBeDefined();
+      expect(mock.db.flow.gate_history.bob).toHaveLength(2);
     });
-    it.todo('read', () => {
+    it('read', () => {
       history.flush();
       history.history = {};
       history.read();
-      expect(mock.db.gate_history.bob).toHaveLength(2);
+      expect(mock.db.flow.gate_history.bob).toHaveLength(2);
       let f = history
         .filter('bob')
         .cutoff(tNow - 10000)

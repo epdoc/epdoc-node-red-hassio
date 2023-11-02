@@ -39,7 +39,7 @@
     "typedoc": "^0.25.3"
   },
   "dependencies": {
-    "epdoc-node-red-hautil": "^0.16.4",
+    "epdoc-node-red-hautil": "^0.16.5",
     "epdoc-timeutil": "^2.2.3",
     "epdoc-util": "^0.2.6"
   },
