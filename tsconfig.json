@@ -13,6 +13,8 @@
     "module": "esnext",
     "target": "esnext",
     "outDir": "./dist",
+    "declaration": true,
+    "sourceMap": true,
     "moduleResolution": "bundler",
     "moduleDetection": "force",
     "composite": true,
@@ -25,9 +27,7 @@
     "esModuleInterop": true,
     "types": [
       "bun-types" // add Bun global
-    ],
-    "declaration": true,
-    "sourceMap": true
+    ]
   },
   "typedocOptions": {
     "entryPoints": ["src/index.ts"],
@@ -36,7 +36,6 @@
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules"],
   "x_compilerOptions": {
-    "allowImportingTsExtensions": true,
     "x_outFile": "./dist/index.ts",
     "x_emitDeclarationOnly": true
   }

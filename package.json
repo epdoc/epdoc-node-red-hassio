@@ -1,11 +1,16 @@
 {
   "name": "epdoc-node-red-hassio",
-  "version": "0.16.0",
-  "description": "Node-RED code for my own Home Assistant deployment",
+  "version": "0.16.2",
+  "description": "General Purpose Node-RED utils for Home Assistant",
   "private": false,
   "modules": "src/index.ts",
   "type": "module",
   "main": "dist/index.js",
+  "keywords": [
+    "util",
+    "nodered",
+    "homeassistant"
+  ],
   "license": "MIT",
   "author": {
     "name": "James Pravetz",
@@ -13,14 +18,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jpravetz/epdoc-node-red-hassio.git"
+    "url": "git+https://github.com/jpravetz/epdoc-node-red-hautil.git"
   },
   "scripts": {
     "build_failed": "bun build ./src/index.ts --target node --outdir ./dist && tsc",
     "build": "tsc",
     "clean": "rm -rf dist docs && echo 'Done.'",
     "coverage": "bun test --coverage",
-    "format": "prettier --write 'src/**/*.ts' 'test/**/*.ts' '*.js' '*.json'",
+    "format": "prettier --write 'src/**/*.ts'",
     "docs": "./node_modules/typedoc/bin/typedoc"
   },
   "devDependencies": {
@@ -33,12 +38,12 @@
     "prettier": "^3.0.3",
     "typedoc": "^0.25.3"
   },
+  "dependencies": {
+    "epdoc-node-red-hautil": "^0.16.4",
+    "epdoc-timeutil": "^2.2.3",
+    "epdoc-util": "^0.2.6"
+  },
   "peerDependencies": {
     "typescript": "^5.0.0"
-  },
-  "dependencies": {
-    "epdoc-node-red-hautil": "latest",
-    "epdoc-timeutil": "latest",
-    "epdoc-util": "latest"
   }
 }
