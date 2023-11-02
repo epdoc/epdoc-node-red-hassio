@@ -1,12 +1,12 @@
 import { Integer, deepCopy, isArray, isNonEmptyArray } from 'epdoc-util';
 import { HistoryLocation, LocationHistory, LocationHistoryItem, Person } from './location-history';
-import { EpochMilliseconds } from './types';
+import { EpochMilliseconds } from 'epdoc-node-red-hautil';
 
 export class HistoryFilter {
   private _person: Person;
   private _items: LocationHistoryItem[] = [];
   private _locations: HistoryLocation[] = [];
-  private _tCutoffMs: EpochMilliseconds;
+  private _tCutoffMs: EpochMilliseconds = 0;
 
   constructor(person: Person, items: LocationHistoryItem[]) {
     this._person = person;
@@ -62,7 +62,11 @@ export class HistoryFilter {
    * @returns self
    */
   sortByLocation(): HistoryFilter {
-    if (isNonEmptyArray(this._locations) && isNonEmptyArray(this._items) && this._items.length > 1) {
+    if (
+      isNonEmptyArray(this._locations) &&
+      isNonEmptyArray(this._items) &&
+      this._items.length > 1
+    ) {
       this._items.sort((a: LocationHistoryItem, b: LocationHistoryItem) => {
         let adx = this._locations.indexOf(a.location);
         let bdx = this._locations.indexOf(b.location);

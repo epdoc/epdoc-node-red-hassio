@@ -1,3 +1,5 @@
+import { describe, expect, it } from 'bun:test';
+import { NodeRedOptsMock } from 'epdoc-node-red-hautil';
 import { LocationHistory } from '../src';
 
 function g(i) {
@@ -5,21 +7,14 @@ function g(i) {
 }
 
 describe('LocationHistory', () => {
+  const mock: NodeRedOptsMock = new NodeRedOptsMock();
+
   const tNow = new Date().getTime();
   let db = {};
   const LOCATIONS = [];
-  const getStorage = function (key) {
-    return db[key];
-  };
-  const setStorage = function (key, val) {
-    db[key] = val;
-  };
-  let opts = {
-    getStorage: getStorage,
-    setStorage: setStorage,
-  };
+
   describe('basic', () => {
-    let history = new LocationHistory(opts);
+    let history = new LocationHistory(mock.opts);
     it('find none', () => {
       let f = history.filter('bob');
       expect(f.found()).toEqual(false);

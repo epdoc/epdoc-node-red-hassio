@@ -25,11 +25,15 @@ To install dependencies:
 bun install
 ```
 
+Uses bun for package management.
+
 To test:
 
 ```bash
 bun test
 ```
+
+Uses bun's test runner.
 
 To build:
 
@@ -37,10 +41,12 @@ To build:
 bun run build
 ```
 
+Uses TypeScript compiler `tsc` because I have not been able to get `bun build`
+to generate declaration files that contain all declared types.
+
 To publish:
 
 ```bash
 npm publish
 ```
 
-This project was created using `bun init` in bun v1.0.7. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.

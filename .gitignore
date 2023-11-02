@@ -135,6 +135,7 @@ dist
 
 .temp
 .cache
+.tmp
 
 # Docusaurus cache and generated files
 
