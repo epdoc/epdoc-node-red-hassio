@@ -73,7 +73,7 @@ describe('setFan', () => {
       'fan.away_room': {
         state: 'off'
       }
-});
+    });
     let ha = new HA(mock.opts);
 
     it('timeout', () => {

@@ -20,16 +20,18 @@
     "build": "tsc",
     "clean": "rm -rf dist docs && echo 'Done.'",
     "coverage": "bun test --coverage",
-    "format": "prettier --write 'src/**/*.ts' 'test/**/*.ts'",
+    "format": "prettier --write 'src/**/*.ts' 'test/**/*.ts' '*.js' '*.json'",
     "docs": "./node_modules/typedoc/bin/typedoc"
   },
   "devDependencies": {
     "bun-types": "latest",
-    "eslint-config-prettier": "latest",
-    "eslint-plugin-import": "latest",
-    "eslint-plugin-prefer-arrow": "latest",
-    "prettier": "latest",
-    "eslint": "latest"
+    "eslint": "^8.52.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-prettier": "^5.0.0",
+    "eslint-plugin-prefer-arrow": "^1.2.3",
+    "eslint-plugin-unicorn": "^49.0.0",
+    "prettier": "^3.0.3",
+    "typedoc": "^0.25.3"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"

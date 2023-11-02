@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'bun:test';
 import { NodeRedOptsMock } from 'epdoc-node-red-hautil';
 import { isObject } from 'epdoc-util';
-import { PingContext } from './../src/ping-context';
+import { PingContext } from '../src/ping-context';
 
-describe.skip('ping-context', () => {
+describe('ping-context', () => {
   describe('group1', () => {
     const mock: NodeRedOptsMock = new NodeRedOptsMock();
 
@@ -13,4 +13,4 @@ describe.skip('ping-context', () => {
     });
   });
 });
-``
+``;
