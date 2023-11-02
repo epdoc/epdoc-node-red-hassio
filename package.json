@@ -1,23 +1,24 @@
 {
-  "name": "epdoc-node-red-connectivity",
-  "version": "0.0.1",
-  "description": "Ping connectivity test for Node-RED",
+  "name": "epdoc-node-red-hassio",
+  "version": "0.16.0",
+  "description": "Node-RED code for my own Home Assistant deployment",
+  "private": false,
+  "module": "./src/index.ts",
+  "type": "module",
+  "license": "MIT",
   "author": {
     "name": "James Pravetz",
     "email": "jpravetz@epdoc.com"
   },
-  "license": "MIT",
+  "main": "dist/index.js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jpravetz/epdoc-node-red-connectivity.git"
+    "url": "git+https://github.com/jpravetz/epdoc-node-red-hassio.git"
   },
-  "module": "./src/index.ts",
-  "type": "module",
-  "main": "dist/index.js",
   "scripts": {
     "build": "bun build ./src/index.ts --target node --outdir ./dist && bun run build:declaration",
     "build:declaration": "tsc --emitDeclarationOnly",
-    "clean": "rm -rf dist && rm -rf docs && echo 'Done.'",
+    "clean": "rm -rf dist docs && echo 'Done.'",
     "coverage": "bun test --coverage",
     "format": "prettier --write 'src/**/*.ts'",
     "docs": "./node_modules/typedoc/bin/typedoc"
@@ -33,6 +34,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "epdoc-node-red-hautil": "^0.15.3",
     "epdoc-timeutil": "^2.2.2",
     "epdoc-util": "^0.2.9",
     "eslint": "^8.52.0"
