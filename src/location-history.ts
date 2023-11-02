@@ -1,5 +1,11 @@
+import {
+  FunctionNodeBase,
+  NodeRedContextGetFunction,
+  NodeRedContextSetFunction,
+  NodeRedOpts
+} from 'epdoc-node-red-hautil';
 import { EpochMilliseconds } from 'epdoc-timeutil';
-import { Dict, isArray, isFunction } from 'epdoc-util';
+import { Dict, isArray } from 'epdoc-util';
 import { HistoryFilter } from './history-filter';
 
 export type Person = string;
@@ -9,28 +15,23 @@ export type LocationHistoryItem = {
   location: HistoryLocation;
   time: EpochMilliseconds;
 };
-export type LocationHistoryOptions = LogOpts & {
-  getStorage?: (string) => Dict;
-  setStorage?: Function;
-};
 export type HistoryDict = Record<Person, any>;
 
-export function newLocationHistory(options) {
-  return new LocationHistory(options);
+export function newLocationHistory(opts?: NodeRedOpts) {
+  return new LocationHistory(opts);
 }
 
 export class LocationHistory extends FunctionNodeBase {
   private GATE_HISTORY = 'gate_history';
   public history: HistoryDict = {};
   dirty = false;
-  getStorage = null;
-  setStorage = null;
+  getStorage: NodeRedContextGetFunction | null = null;
+  setStorage: NodeRedContextSetFunction | null = null;
 
-  constructor(options?: NodeRedOpts) {
-    super(options as LogOpts);
-    this.getStorage = isFunction(options.getStorage) ? options.getStorage : null;
-    this.setStorage = isFunction(options.setStorage) ? options.setStorage : null;
-
+  constructor(opts?: NodeRedOpts) {
+    super(opts);
+    this.getStorage = opts?.flow.get ? opts.flow.get : null;
+    this.setStorage = opts?.flow.set ? opts.flow.set : null;
     this.read();
   }
 
@@ -113,7 +114,7 @@ export class LocationHistory extends FunctionNodeBase {
 
   toString(tNow: EpochMilliseconds): string {
     tNow = tNow ? tNow : new Date().getTime();
-    let result = {};
+    let result: Dict = {};
     Object.keys(this.history).forEach((key) => {
       const items: LocationHistoryItem[] = this.history[key];
       result[key] = [];
@@ -129,7 +130,7 @@ export class LocationHistory extends FunctionNodeBase {
   static _itemToString(item: LocationHistoryItem, tNow: EpochMilliseconds): Dict {
     return {
       location: item.location,
-      time: item.time - tNow,
+      time: item.time - tNow
     };
   }
 }

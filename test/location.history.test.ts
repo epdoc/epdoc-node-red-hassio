@@ -1,10 +1,20 @@
+import { describe, expect, it } from 'bun:test';
 import { LocationHistory } from '../src';
+import { NodeRedOpts, NodeRedOptsMockData, createNodeRedOptsMock } from 'epdoc-node-red-hautil';
 
 function g(i) {
   return 'g' + i;
 }
 
 describe('LocationHistory', () => {
+  const mock: NodeRedOptsMockData = {
+    env: {},
+    flow: {},
+    global: {},
+    node: {}
+  };
+  const opts: NodeRedOpts = createNodeRedOptsMock(mock);
+
   const tNow = new Date().getTime();
   let db = {};
   const LOCATIONS = [];
@@ -16,7 +26,7 @@ describe('LocationHistory', () => {
   };
   let opts = {
     getStorage: getStorage,
-    setStorage: setStorage,
+    setStorage: setStorage
   };
   describe('basic', () => {
     let history = new LocationHistory(opts);

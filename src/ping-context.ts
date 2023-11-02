@@ -1,3 +1,4 @@
+import { FunctionNodeBase, NodeRedOpts } from 'epdoc-node-red-hautil';
 import { EpochMilliseconds, Milliseconds, durationUtil } from 'epdoc-timeutil';
 import {
   Dict,
@@ -6,7 +7,7 @@ import {
   isDict,
   isInteger,
   isNonEmptyArray,
-  isNonEmptyString,
+  isNonEmptyString
 } from 'epdoc-util';
 
 const TIMEOUTS = [2500, 13000, 13000];
@@ -24,11 +25,18 @@ export type PingInputData = {
 export type RoundIndex = Integer;
 export type RoundsData = {
   timeout: Milliseconds;
-  hosts: string | string[];
+  hosts: HOST[];
   responses: Integer;
 };
 
-export type PingOutputData = {};
+export type PingOutputData = {
+  host: HOST;
+  timeout: Milliseconds;
+  start_date: EpochMilliseconds;
+  id: EntityShortId;
+  name: string;
+  round: RoundIndex;
+};
 
 export type InputPayload = {
   debug?: boolean;
@@ -71,34 +79,22 @@ export type PingContextData = {
   long: PingContextLong;
 };
 
-export class PingContext {
+export class PingContext extends FunctionNodeBase {
   private _FLOW: Dict = {
     short: 'short',
-    long: 'long',
+    long: 'long'
   };
   private _ctx: PingContextData;
-  private _opts: PingContextOpts;
 
-  constructor(opts: PingContextOpts, payload: InputPayload) {
-    this._opts = opts;
+  constructor(opts?: NodeRedOpts, payload?: InputPayload) {
+    super(opts);
     if (payload) {
       this._ctx = this.initFromPayload(payload);
     } else {
       this._ctx = this.initFromStorage();
     }
-    // this._ctx = { short: {}, long: { down: false } };
   }
 
-  get env() {
-    return this._opts.env;
-  }
-
-  get flow() {
-    return this._opts.flow;
-  }
-  get node() {
-    return this._opts.node;
-  }
   get short() {
     return this._ctx.short;
   }
@@ -118,10 +114,10 @@ export class PingContext {
         busyAt: tNowMs,
         startDate: tNowMs, // The time when we entered this flow, NOT when we went down
         rounds: this._initRounds(
-          payload.data || [this.env.get('AN_HOSTS0'), this.env.get('AN_HOSTS1')],
-        ),
+          payload.data || [this.env.get('AN_HOSTS0'), this.env.get('AN_HOSTS1')]
+        )
       },
-      long: this.flow.get(this._FLOW.long, 'file') as PingContextLong,
+      long: this.flow.get(this._FLOW.long, 'file') as PingContextLong
     };
     this._saveShort();
     return ctx;
@@ -158,7 +154,7 @@ export class PingContext {
           const item: RoundsData = {
             hosts: filtered,
             timeout: timeout ? timeout : TIMEOUTS[idx],
-            responses: 0,
+            responses: 0
           };
           results.push(item);
         }
@@ -181,7 +177,7 @@ export class PingContext {
   initFromStorage(): PingContextData {
     const ctx: PingContextData = {
       short: this.flow.get(this._FLOW.short) as PingContextShort,
-      long: this.flow.get(this._FLOW.long, 'file') as PingContextLong,
+      long: this.flow.get(this._FLOW.long, 'file') as PingContextLong
     };
     return ctx;
   }
@@ -216,7 +212,11 @@ export class PingContext {
       return true;
     }
     const tNowMs = new Date().getTime();
-    if (tNowMs - this.short.busyAt > this.short.timeout[0] + this.short.timeout[1] + 1000) {
+    let totalTimeout = 0;
+    this.short.rounds.forEach((round) => {
+      totalTimeout += round.timeout;
+    });
+    if (tNowMs - this.short.busyAt > totalTimeout + 3000) {
       return true;
     }
     return false;
@@ -266,13 +266,13 @@ export class PingContext {
   downAt(): EpochMilliseconds {
     return this.long.downAt || 0;
   }
-  lastAliveAt(): EpochMilliseconds | undefined {
-    return this.long.lastAliveAt;
+  lastAliveAt(): EpochMilliseconds {
+    return this.long.lastAliveAt ? this.long.lastAliveAt : 0;
   }
   setUp(tMs: EpochMilliseconds): PingContext {
     this._ctx.long = {
       down: false,
-      count: 1, // XXXX
+      count: 1 // XXXX
     };
     if (tMs) {
       this.long.lastAliveAt = tMs;
@@ -285,7 +285,7 @@ export class PingContext {
     this._ctx.long = {
       down: true,
       downAt: tMs,
-      count: 1,
+      count: 1
     };
     return this._saveLong();
   }
@@ -329,21 +329,26 @@ export class PingContext {
   //     return this.pingPayload(this.short.ipSecondary, timeout)
   // }
 
-  _pingPayloadItem(host, timeout, tStartMs, round): PingReport {
+  _pingPayloadItem(
+    host: HOST,
+    timeout: Milliseconds,
+    tStartMs: EpochMilliseconds,
+    round: RoundIndex
+  ): PingOutputData {
     return {
       host: host,
       timeout: timeout,
       start_date: tStartMs,
       id: this.short.id,
       name: this.short.name,
-      round: round,
+      round: round
     };
   }
 
   pingPayload(round: RoundIndex) {
     const item = this.getRound(round);
     const tStartMs = new Date().getTime();
-    let result: PingReport[] = [];
+    let result: PingOutputData[] = [];
     item.hosts.forEach((host) => {
       result.push(this._pingPayloadItem(host, item.timeout, tStartMs, round));
     });
@@ -353,11 +358,11 @@ export class PingContext {
   /**
    * Set tEndMs if the connection has been restablished at this time
    */
-  getReportPayload(tEndMs, ping) {
-    let result = {
+  getReportPayload(tEndMs: EpochMilliseconds, ping: PingOutputData) {
+    let result: PingReport = {
       id: this.short.id,
       name: this.short.name,
-      down_count: this.long.count,
+      down_count: this.long.count
     };
     if ((this.isDown() && ping && ping.round === 0) || tEndMs) {
       result.start_date = this.downAt();
@@ -384,12 +389,12 @@ export class PingContext {
 }
 
 const lib = {
-  newFlowContext: (opts: PingContextOpts) => {
+  newFlowContext: (opts: NodeRedOpts) => {
     return new PingContext(opts);
   },
-  newFromStorage: (opts: PingContextOpts) => {
+  newFromStorage: (opts: NodeRedOpts) => {
     return new PingContext(opts).initFromStorage();
-  },
+  }
 };
 // flow.set('lib', lib);
 

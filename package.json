@@ -3,40 +3,40 @@
   "version": "0.16.0",
   "description": "Node-RED code for my own Home Assistant deployment",
   "private": false,
-  "module": "./src/index.ts",
+  "modules": "src/index.ts",
   "type": "module",
+  "main": "dist/index.js",
   "license": "MIT",
   "author": {
     "name": "James Pravetz",
     "email": "jpravetz@epdoc.com"
   },
-  "main": "dist/index.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/jpravetz/epdoc-node-red-hassio.git"
   },
   "scripts": {
-    "build": "bun build ./src/index.ts --target node --outdir ./dist && bun run build:declaration",
-    "build:declaration": "tsc --emitDeclarationOnly",
+    "build_failed": "bun build ./src/index.ts --target node --outdir ./dist && tsc",
+    "build": "tsc",
     "clean": "rm -rf dist docs && echo 'Done.'",
     "coverage": "bun test --coverage",
-    "format": "prettier --write 'src/**/*.ts'",
+    "format": "prettier --write 'src/**/*.ts' 'test/**/*.ts'",
     "docs": "./node_modules/typedoc/bin/typedoc"
   },
   "devDependencies": {
-    "bun-types": "^1.0.7",
-    "eslint-config-prettier": "^9.0.0",
-    "eslint-plugin-import": "^2.29.0",
-    "eslint-plugin-prefer-arrow": "^1.2.3",
-    "prettier": "^3.0.3"
+    "bun-types": "latest",
+    "eslint-config-prettier": "latest",
+    "eslint-plugin-import": "latest",
+    "eslint-plugin-prefer-arrow": "latest",
+    "prettier": "latest",
+    "eslint": "latest"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
   },
   "dependencies": {
-    "epdoc-node-red-hautil": "^0.15.3",
-    "epdoc-timeutil": "^2.2.2",
-    "epdoc-util": "^0.2.9",
-    "eslint": "^8.52.0"
+    "epdoc-node-red-hautil": "latest",
+    "epdoc-timeutil": "latest",
+    "epdoc-util": "latest"
   }
 }
