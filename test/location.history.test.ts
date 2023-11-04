@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'bun:test';
+// import { describe, expect, it } from 'bun:test';
 import { NodeRedOptsMock } from 'epdoc-node-red-hautil';
 import { LocationHistory } from '../src';
 
@@ -173,19 +173,19 @@ describe('LocationHistory', () => {
       expect(filter.numFound()).toEqual(0);
     });
     it('pre flush raw', () => {
-      expect(db.gate_history).toBeUndefined();
+      expect(mock.db.flow.gate_history).toBeUndefined();
     });
     it('flush raw', () => {
       history.add('bob', g(2), tNow + 6000);
       history.flush();
-      expect(db.gate_history).toBeDefined();
-      expect(db.gate_history.bob).toHaveLength(2);
+      expect(mock.db.flow.gate_history).toBeDefined();
+      expect(mock.db.flow.gate_history.bob).toHaveLength(2);
     });
     it('read', () => {
       history.flush();
       history.history = {};
       history.read();
-      expect(db.gate_history.bob).toHaveLength(2);
+      expect(mock.db.flow.gate_history.bob).toHaveLength(2);
       let f = history
         .filter('bob')
         .cutoff(tNow - 10000)

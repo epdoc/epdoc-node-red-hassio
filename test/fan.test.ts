@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'bun:test';
+// import { describe, expect, it } from 'bun:test';
 import { HA, NodeRedOptsMock } from 'epdoc-node-red-hautil';
 import { setFan } from '../src';
 
@@ -77,14 +77,31 @@ describe('setFan', () => {
     let ha = new HA(mock.opts);
 
     it('timeout', () => {
+      let TIMEOUT = 500;
+      let count = 0;
+      let tStart = new Date().getTime();
+      expect(ha.entity('fan.away_room')).toBeDefined();
+      expect(ha.entity('fan.away_room').isOff()).toEqual(true);
       return setFan(
-        { fan: 'away_room', service: 'on', timeout: 5000 },
+        { fan: 'away_room', service: 'on', timeout: TIMEOUT },
         (payload) => {
-          expect(payload).toEqual({
-            target: { entity_id: 'fan.away_room' },
-            service: 'turn_on',
-            domain: 'fan'
-          });
+          let tNow = new Date().getTime();
+          if (count === 0) {
+            expect(tNow - tStart).toBeLessThan(TIMEOUT);
+            expect(payload).toEqual({
+              target: { entity_id: 'fan.away_room' },
+              service: 'turn_on',
+              domain: 'fan'
+            });
+          } else if (count === 1) {
+            expect(tNow - tStart).toBeGreaterThan(TIMEOUT);
+            expect(payload).toEqual({
+              target: { entity_id: 'fan.away_room' },
+              service: 'turn_off',
+              domain: 'fan'
+            });
+          }
+          count = count + 1;
         },
         mock.opts
       );

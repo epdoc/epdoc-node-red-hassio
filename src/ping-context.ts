@@ -7,7 +7,8 @@ import {
   isDict,
   isInteger,
   isNonEmptyArray,
-  isNonEmptyString
+  isNonEmptyString,
+  isString
 } from 'epdoc-util';
 
 const TIMEOUTS = [2500, 13000, 13000];
@@ -18,7 +19,7 @@ export type EntityShortId = string;
  */
 export type HOST = string;
 
-export type PingInputData = {
+export type PingContextInputData = {
   timeout: Milliseconds;
   hosts: string | string[];
 };
@@ -29,7 +30,7 @@ export type RoundsData = {
   responses: Integer;
 };
 
-export type PingOutputData = {
+export type PingNodeInputItem = {
   host: HOST;
   timeout: Milliseconds;
   start_date: EpochMilliseconds;
@@ -37,12 +38,14 @@ export type PingOutputData = {
   name: string;
   round: RoundIndex;
 };
-
-export type InputPayload = {
+export function isPingNodeInputItem(val: any): val is PingNodeInputItem {
+  return isDict(val) && isString(val.host) && isInteger(val.timeout);
+}
+export type PingContextInputPayload = {
   debug?: boolean;
   name: string;
   id: EntityShortId;
-  data: PingInputData[];
+  data: PingContextInputData[];
 };
 
 export type PingReport = {
@@ -86,7 +89,7 @@ export class PingContext extends FunctionNodeBase {
   };
   private _ctx: PingContextData;
 
-  constructor(opts?: NodeRedOpts, payload?: InputPayload) {
+  constructor(opts?: NodeRedOpts, payload?: PingContextInputPayload) {
     super(opts);
     if (payload) {
       this._ctx = this.initFromPayload(payload);
@@ -102,7 +105,7 @@ export class PingContext extends FunctionNodeBase {
     return this._ctx.long;
   }
 
-  initFromPayload(payload: InputPayload): PingContextData {
+  initFromPayload(payload: PingContextInputPayload): PingContextData {
     const id = payload.id || this.env.get('AN_ID');
     const tNowMs = new Date().getTime();
     const ctx: PingContextData = {
@@ -123,10 +126,10 @@ export class PingContext extends FunctionNodeBase {
     return ctx;
   }
 
-  _initRounds(arr: PingInputData[]): RoundsData[] {
+  _initRounds(arr: PingContextInputData[]): RoundsData[] {
     const results: RoundsData[] = [];
     for (let idx = 0; idx < arr.length; ++idx) {
-      const item: PingInputData = arr[idx];
+      const item: PingContextInputData = arr[idx];
       let result: HOST[] = [];
       let timeout: Milliseconds = 0;
       if (isArray(item)) {
@@ -334,7 +337,7 @@ export class PingContext extends FunctionNodeBase {
     timeout: Milliseconds,
     tStartMs: EpochMilliseconds,
     round: RoundIndex
-  ): PingOutputData {
+  ): PingNodeInputItem {
     return {
       host: host,
       timeout: timeout,
@@ -348,7 +351,7 @@ export class PingContext extends FunctionNodeBase {
   pingPayload(round: RoundIndex) {
     const item = this.getRound(round);
     const tStartMs = new Date().getTime();
-    let result: PingOutputData[] = [];
+    let result: PingNodeInputItem[] = [];
     item.hosts.forEach((host) => {
       result.push(this._pingPayloadItem(host, item.timeout, tStartMs, round));
     });
@@ -358,7 +361,7 @@ export class PingContext extends FunctionNodeBase {
   /**
    * Set tEndMs if the connection has been restablished at this time
    */
-  getReportPayload(tEndMs: EpochMilliseconds, ping: PingOutputData) {
+  getReportPayload(tEndMs: EpochMilliseconds, ping: PingNodeInputItem) {
     let result: PingReport = {
       id: this.short.id,
       name: this.short.name,
@@ -388,7 +391,7 @@ export class PingContext extends FunctionNodeBase {
   }
 }
 
-const lib = {
+export const pingContextLib = {
   newFlowContext: (opts: NodeRedOpts) => {
     return new PingContext(opts);
   },
