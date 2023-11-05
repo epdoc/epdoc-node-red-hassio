@@ -1,3 +1,48 @@
-node_modules
-package-lock.json
-/tmp
+# Logs
+
+logs
+_.log
+npm-debug.log_
+
+# Temp files
+*~
+*.tmp
+tmp*
+tmp
+
+# Build directory
+dist
+
+# Runtime data
+
+pids
+_.pid
+_.seed
+\*.pid.lock
+
+# Dependency directories
+
+node_modules/
+
+# TypeScript cache
+
+\*.tsbuildinfo
+
+# Output of 'npm pack'
+
+\*.tgz
+
+# dotenv environment variable files
+
+.env
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local
+
+# IntelliJ based IDEs
+.idea
+
+# Finder (MacOS) folder config
+.DS_Store
+

@@ -1,12 +1,13 @@
 {
   "compilerOptions": {
-    "target": "es6",
+    "target": "ES2015",
     "module": "commonjs",
     "declaration": true,
     "sourceMap": true,
     "outDir": "./dist",
-    "resolveJsonModule": true,
-    "esModuleInterop": true
+    "noEmit": false,
+    "esModuleInterop": true,
+    "strict": true
   },
   "y_compilerOptions": {
     "lib": ["ESNext"],
