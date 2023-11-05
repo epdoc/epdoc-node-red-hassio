@@ -353,29 +353,6 @@ export class PingContext extends FunctionNodeBase {
     return this;
   }
 
-  durationString(tMs: EpochMilliseconds) {
-    return durationUtil(tMs, { ms: 1 }).format();
-  }
-
-  connectionStatusAsString() {
-    let s = 'connection is ';
-    if (this.isUp()) {
-      s += 'up';
-    } else {
-      const tNowMs = new Date().getTime();
-      const tDiff = durationUtil(tNowMs - this.downAt(), {}).format();
-      s += 'down for ' + tDiff;
-    }
-    return s;
-  }
-
-  // pingPrimaryPayload(timeout) {
-  //     return this.pingPayload(this._short.ipPrimary, timeout)
-  // }
-  // pingSecondaryPayload(timeout) {
-  //     return this.pingPayload(this._short.ipSecondary, timeout)
-  // }
-
   _pingPayloadItem(
     host: HOST,
     timeout: Milliseconds,
@@ -433,8 +410,20 @@ export class PingContext extends FunctionNodeBase {
     }
     return result;
   }
+
+  durationString(tMs: EpochMilliseconds) {
+    return durationUtil(tMs, { ms: 1 }).format();
+  }
+
+  connectionStatusAsString() {
+    let s = 'connection is ';
+    if (this.isUp()) {
+      s += 'up';
+    } else {
+      const tNowMs = new Date().getTime();
+      const tDiff = durationUtil(tNowMs - this.downAt(), {}).format();
+      s += 'down for ' + tDiff;
+    }
+    return s;
+  }
 }
-
-// flow.set('lib', lib);
-
-// return msg;
