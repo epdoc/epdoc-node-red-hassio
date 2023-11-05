@@ -3,7 +3,7 @@ import { isArray, isObject } from 'epdoc-util';
 import { PingContext, PingFlowInputPayload, PingNodeInputItem } from '../src/ping-context';
 
 describe('ping-context', () => {
-  describe('group1', () => {
+  describe('data set 1', () => {
     const mock: NodeRedOptsMock = new NodeRedOptsMock();
     const input: PingFlowInputPayload = {
       id: 'mytest',
@@ -82,5 +82,59 @@ describe('ping-context', () => {
     it('test', () => {});
     it('test', () => {});
   });
+  describe('data set 2', () => {
+    const mock: NodeRedOptsMock = new NodeRedOptsMock();
+    const input: PingFlowInputPayload = {
+      id: 'mytest',
+      name: 'My Test',
+      data: [
+        {
+          timeout: 50,
+          hosts: ['192.169.1.3', '192.169.1.2']
+        },
+        {
+          timeout: 100,
+          hosts: ['192.169.1.3', '192.169.1.2']
+        },
+        {
+          timeout: 80,
+          hosts: ['192.169.1.1', '192.169.1.3', '192.169.1.2']
+        }
+      ]
+    };
+    mock.db.flow.test = {};
+    let ctx: PingContext;
+    const tNow = new Date().getTime();
+    const expectedRounds = [
+      {
+        hosts: ['192.169.1.3', '192.169.1.2'],
+        responses: 0,
+        timeout: 50
+      },
+      {
+        hosts: ['192.169.1.3', '192.169.1.2'],
+        responses: 0,
+        timeout: 100
+      },
+      {
+        hosts: ['192.169.1.1', '192.169.1.3', '192.169.1.2'],
+        responses: 0,
+        timeout: 80
+      }
+    ];
+
+    it('constructor', () => {
+      ctx = new PingContext(mock.opts, input);
+      expect(isObject(ctx)).toEqual(true);
+      expect(ctx.short.id).toEqual(input.id);
+      expect(ctx.short.name).toEqual(input.name);
+      expect(ctx.short.busy).toEqual(true);
+      expect(ctx.short.debug).toEqual(false);
+      expect(ctx.short.busyAt).toBeGreaterThan(tNow);
+      expect(ctx.short.busyAt).toBeLessThan(tNow + 100);
+      expect(ctx.short.startDate).toBeGreaterThan(tNow);
+      expect(ctx.short.startDate).toBeLessThan(tNow + 100);
+      expect(ctx.short.loopsData).toEqual(expectedRounds);
+    });
+  });
 });
-``;

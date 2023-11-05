@@ -1,15 +1,14 @@
 import { FunctionNodeBase, NodeRedOpts } from 'epdoc-node-red-hautil';
 import { EpochMilliseconds, Milliseconds, durationUtil } from 'epdoc-timeutil';
 import {
-  Dict,
   Integer,
   isArray,
+  isBoolean,
   isDict,
   isInteger,
   isNonEmptyArray,
   isNonEmptyString,
-  isString,
-  isTrue
+  isString
 } from 'epdoc-util';
 
 const TIMEOUTS = [2500, 13000, 13000];
@@ -26,6 +25,9 @@ export type PingFlowInputLoopPayload = {
   timeout: Milliseconds;
   hosts: string | string[];
 };
+function isPingFlowInputLoopPayload(val: any): val is PingFlowInputLoopPayload {
+  return isDict(val) && isInteger(val.timeout) && (isNonEmptyString(val.hosts) || isNonEmptyArray(val.hosts));
+}
 
 /**
  * The flow can loop over multiple calls to `node-red-node-ping`. This is the
@@ -73,7 +75,15 @@ export type PingFlowInputPayload = {
 };
 
 export function isPingFlowInputPayload(val: any): val is PingFlowInputLoopPayload {
-  return isDict(val) && isNonEmptyString(val.name) && isNonEmptyString(val.id) && isNonEmptyArray(val.data);
+  if (isDict(val) && isNonEmptyString(val.name) && isNonEmptyString(val.id) && isNonEmptyArray(val.data)) {
+    for (let idx = 0; idx < val.data.length; ++idx) {
+      if (!isPingFlowInputLoopPayload(val.data[idx])) {
+        return false;
+      }
+    }
+    return true;
+  }
+  return false;
 }
 
 /**
@@ -105,6 +115,17 @@ export type PingContextShort = {
   startDate: EpochMilliseconds;
   loopsData: PingLoopData[];
 };
+function isPingContextShort(val: any): val is PingContextShort {
+  return (
+    isDict(val) &&
+    isBoolean(val.busy) &&
+    isString(val.id) &&
+    isString(val.name) &&
+    isInteger(val.busyAt) &&
+    isInteger(val.startDate) &&
+    isArray(val.loopsData)
+  );
+}
 /**
  * Internal Context that lives across flows.
  */
@@ -114,10 +135,11 @@ export type PingContextLong = {
   lastAliveAt?: EpochMilliseconds;
   count: Integer;
 };
-export type PingContextData = {
-  short: PingContextShort;
-  long: PingContextLong;
-};
+function isPingContextLong(val: any): val is PingContextLong {
+  return (
+    isDict(val) && isBoolean(val.down) && isInteger(val.downAt) && isInteger(val.lastAliveAt) && isInteger(val.count)
+  );
+}
 
 export function newPingContext(opts: NodeRedOpts, payload?: PingFlowInputPayload): PingContext {
   return new PingContext(opts, payload);
@@ -130,85 +152,114 @@ export function newPingContext(opts: NodeRedOpts, payload?: PingFlowInputPayload
  * from the flow's context.
  */
 export class PingContext extends FunctionNodeBase {
-  private _FLOW: Dict = {
-    short: 'short',
-    long: 'long'
-  };
   private _short: PingContextShort;
   private _long: PingContextLong;
 
   constructor(opts?: NodeRedOpts, payload?: PingFlowInputPayload) {
     super(opts);
     this._long = this.flow.get(LONG, 'file') as PingContextLong;
-
-    if (isPingFlowInputPayload(payload)) {
-      const id: EntityShortId = payload.id ? payload.id : this.env.get('AN_ID');
-      const tNowMs = new Date().getTime();
-      this._short = {
-        debug: payload.debug == true || isTrue(this.env.get('AN_DEBUG')),
-        id: id,
-        name: isNonEmptyString(payload.name) ? payload.name : this.env.get('AN_NAME'),
-        busy: true,
-        busyAt: tNowMs,
-        startDate: tNowMs, // The time when we entered this flow, NOT when we went down
-        loopsData: this._initLoopsData(payload.data || [this.env.get('AN_HOSTS0'), this.env.get('AN_HOSTS1')])
-      };
-      this._saveShort();
-    } else {
-      this._short = this.flow.get(SHORT) as PingContextShort;
+    if (!isPingContextLong(this._long)) {
+      this._long = { down: false, downAt: 0, lastAliveAt: 0, count: 0 };
     }
+    this._short = this.flow.get(SHORT);
+    if (!isPingContextShort(this._short)) {
+      this._short = {
+        debug: this.env.get('AN_DEBUG') === true,
+        id: this.env.get('AN_ID'),
+        name: this.env.get('AN_NAME'),
+        busy: false,
+        busyAt: 0,
+        startDate: 0,
+        loopsData: this.initLoopsDataFromEnv()
+      };
+    }
+    this.initFromPayload(payload);
   }
 
-  get short() {
+  initFromPayload(payload?: PingFlowInputPayload): this {
+    if (isPingFlowInputPayload(payload)) {
+      const tNowMs = new Date().getTime();
+      this._short.busy = true;
+      this._short.busyAt = tNowMs;
+      this._short.startDate = tNowMs;
+      if (isNonEmptyString(payload.id)) {
+        this._short.id = payload.id;
+      }
+      if (isNonEmptyString(payload.name)) {
+        this._short.name = payload.name;
+      }
+      if (isNonEmptyArray(payload.data)) {
+        this._short.loopsData = this.initLoopsDataFromPayload(payload.data);
+      }
+      const id: EntityShortId = payload.id ? payload.id : this._short.id;
+      this._saveShort();
+    }
+    return this;
+  }
+
+  get short(): PingContextShort {
     return this._short;
   }
-  get long() {
+  get long(): PingContextLong {
     return this._long;
   }
 
-  _initLoopsData(arr: PingFlowInputLoopPayload[]): PingLoopData[] {
+  private initLoopsDataFromPayload(arr: PingFlowInputLoopPayload[]): PingLoopData[] {
     const results: PingLoopData[] = [];
-    for (let idx = 0; idx < arr.length; ++idx) {
-      const item: PingFlowInputLoopPayload = arr[idx];
-      let result: HOST[] = [];
-      let timeout: Milliseconds = 0;
-      if (isArray(item)) {
-        result = item;
-      } else if (isNonEmptyString(item)) {
-        result = this._commaList(item);
-      } else if (isDict(item) && isArray(item.hosts)) {
-        if (isInteger(item.timeout)) {
-          timeout = item.timeout;
-        }
-        if (isArray(item.hosts)) {
-          result = item.hosts;
-        } else if (isNonEmptyString(item.hosts)) {
-          result = this._commaList(item.hosts);
-        }
-      }
-      if (isNonEmptyArray(result)) {
-        let filtered: HOST[] = [];
-        result.forEach((r) => {
-          if (isNonEmptyString(r)) {
-            filtered.push(r);
+    if (isNonEmptyArray(arr)) {
+      for (let idx = 0; idx < arr.length; ++idx) {
+        const item: PingFlowInputLoopPayload = arr[idx];
+        if (isPingFlowInputLoopPayload(arr[idx])) {
+          const item: PingFlowInputLoopPayload = arr[idx];
+          const timeout: Milliseconds = item.timeout ? item.timeout : TIMEOUTS[Math.min(idx, TIMEOUTS.length - 1)];
+          const loopItem: PingLoopData | undefined = this.initLoopData(item.hosts, timeout);
+          if (loopItem) {
+            results.push(loopItem);
           }
-        });
-        if (filtered.length) {
-          const item: PingLoopData = {
-            hosts: filtered,
-            timeout: timeout ? timeout : TIMEOUTS[Math.min(idx, TIMEOUTS.length - 1)],
-            responses: 0
-          };
-          results.push(item);
         }
-      } else {
-        this.node.error('IP Addresses or hostnames not configured correctly');
       }
     }
     if (results.length < 2) {
       this.node.error('IP Addresses or hostnames not configured correctly');
     }
     return results;
+  }
+
+  private initLoopsDataFromEnv(): PingLoopData[] {
+    const results: PingLoopData[] = [];
+    const loopItem0: PingLoopData | undefined = this.initLoopData(this.env.get('AN_HOSTS0'), TIMEOUTS[0]);
+    if (loopItem0) {
+      results.push(loopItem0);
+    }
+    const loopItem1: PingLoopData | undefined = this.initLoopData(this.env.get('AN_HOSTS1'), TIMEOUTS[1]);
+    if (loopItem1) {
+      results.push(loopItem1);
+    }
+    return results;
+  }
+
+  private initLoopData(hosts: string | string[], timeout: Milliseconds): PingLoopData | undefined {
+    if (!isNonEmptyArray(hosts) && isNonEmptyString(hosts)) {
+      hosts = this._commaList(hosts);
+    }
+    if (isNonEmptyArray(hosts)) {
+      let filtered: HOST[] = [];
+      hosts.forEach((host) => {
+        if (isNonEmptyString(host)) {
+          filtered.push(host);
+        }
+      });
+      if (filtered.length) {
+        const item: PingLoopData = {
+          hosts: filtered,
+          timeout: timeout,
+          responses: 0
+        };
+        return item;
+      }
+    } else {
+      this.node.error('IP Addresses or hostnames not configured correctly');
+    }
   }
 
   _commaList(s: string): string[] {
@@ -425,5 +476,9 @@ export class PingContext extends FunctionNodeBase {
       s += 'down for ' + tDiff;
     }
     return s;
+  }
+
+  toString(): string {
+    return '{ "short": ' + JSON.stringify(this._short) + ', "long": ' + JSON.stringify(this._long) + ' }';
   }
 }
