@@ -1,20 +1,18 @@
-// import { describe, expect, it } from 'bun:test';
 import { NodeRedOptsMock } from 'epdoc-node-red-hautil';
 import { LocationHistory } from '../src';
 
-function g(i) {
-  return 'g' + i;
+function g(i): string {
+  return String('g' + i);
 }
 
 describe('LocationHistory', () => {
   const mock: NodeRedOptsMock = new NodeRedOptsMock();
 
   const tNow = new Date().getTime();
-  let db = {};
   const LOCATIONS = [];
 
   describe('basic', () => {
-    let history = new LocationHistory(mock.opts);
+    let history = new LocationHistory({ context: 'flow' }, mock.opts);
     it('find none', () => {
       let f = history.filter('bob');
       expect(f.found()).toEqual(false);
@@ -59,7 +57,7 @@ describe('LocationHistory', () => {
         .cutoff(tNow - 5500)
         .locations([g(1), g(2)]);
       expect(f.numFound()).toEqual(0);
-      f = history.filter('bob').cutoff(tNow - 5500, g(0));
+      f = history.filter('bob').cutoff(tNow - 5500);
       expect(f.numFound()).toEqual(1);
     });
     it('moving one location fail', () => {

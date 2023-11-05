@@ -1,6 +1,6 @@
+import { EpochMilliseconds } from 'epdoc-node-red-hautil';
 import { Integer, deepCopy, isArray, isNonEmptyArray } from 'epdoc-util';
 import { HistoryLocation, LocationHistory, LocationHistoryItem, Person } from './location-history';
-import { EpochMilliseconds } from 'epdoc-node-red-hautil';
 
 export class HistoryFilter {
   private _person: Person;
@@ -38,7 +38,7 @@ export class HistoryFilter {
    * @param {array of strings} locations A string or array of strings.
    * @returns self
    */
-  locations(locations: HistoryLocation[]): HistoryFilter {
+  locations(locations: HistoryLocation | HistoryLocation[]): HistoryFilter {
     this._locations = isArray(locations) ? locations : [locations];
     if (isNonEmptyArray(this._items) && isNonEmptyArray(this._locations)) {
       let newItems: LocationHistoryItem[] = [];
@@ -62,11 +62,7 @@ export class HistoryFilter {
    * @returns self
    */
   sortByLocation(): HistoryFilter {
-    if (
-      isNonEmptyArray(this._locations) &&
-      isNonEmptyArray(this._items) &&
-      this._items.length > 1
-    ) {
+    if (isNonEmptyArray(this._locations) && isNonEmptyArray(this._items) && this._items.length > 1) {
       this._items.sort((a: LocationHistoryItem, b: LocationHistoryItem) => {
         let adx = this._locations.indexOf(a.location);
         let bdx = this._locations.indexOf(b.location);

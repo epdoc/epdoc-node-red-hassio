@@ -1,9 +1,4 @@
-import {
-  FunctionNodeBase,
-  NodeRedContextGetFunction,
-  NodeRedContextSetFunction,
-  NodeRedOpts
-} from 'epdoc-node-red-hautil';
+import { ContextKey, ContextStorageType, FunctionNodeBase, NodeRedOpts } from 'epdoc-node-red-hautil';
 import { EpochMilliseconds } from 'epdoc-timeutil';
 import { Dict, isArray } from 'epdoc-util';
 import { HistoryFilter } from './history-filter';
@@ -15,29 +10,61 @@ export type LocationHistoryItem = {
   location: HistoryLocation;
   time: EpochMilliseconds;
 };
+export type LocationHistoryOpts = {
+  context: 'global' | 'flow';
+  type?: ContextStorageType;
+};
 export type HistoryDict = Record<Person, any>;
 
-export function newLocationHistory(opts?: NodeRedOpts) {
-  return new LocationHistory(opts);
+export function newLocationHistory(lopts: LocationHistoryOpts, opts: NodeRedOpts) {
+  return new LocationHistory(lopts, opts);
 }
 
 export class LocationHistory extends FunctionNodeBase {
   private GATE_HISTORY = 'gate_history';
   public history: HistoryDict = {};
-  dirty = false;
-  getStorage: NodeRedContextGetFunction | null = null;
-  setStorage: NodeRedContextSetFunction | null = null;
+  private dirty = false;
+  private _storage: Dict;
+  private _storageType: ContextStorageType;
 
-  constructor(opts?: NodeRedOpts) {
+  constructor(lopts: LocationHistoryOpts, opts: NodeRedOpts) {
     super(opts);
-    this.getStorage = opts?.flow.get ? opts.flow.get : null;
-    this.setStorage = opts?.flow.set ? opts.flow.set : null;
+    if (lopts) {
+      if (lopts.context) {
+        this._storage = opts[lopts.context];
+      }
+      if (lopts.type) {
+        this._storageType = lopts.type;
+      }
+    }
     this.read();
   }
 
-  read() {
-    if (this.getStorage) {
-      this.history = this.getStorage(this.GATE_HISTORY) || {};
+  private getStorage(key: ContextKey): any {
+    if (this._storage) {
+      return this._storage.get(key, this._storageType);
+    }
+  }
+
+  private setStorage(key: ContextKey, data: any): any {
+    if (this._storage) {
+      return this._storage.set(key, data, this._storageType);
+    }
+  }
+
+  read(): this {
+    this.history = this.getStorage(this.GATE_HISTORY) || {};
+    return this;
+  }
+
+  /**
+   * Write history out to storeage
+   * @returns this
+   */
+  flush(): LocationHistory {
+    if (this.dirty) {
+      this.setStorage(this.GATE_HISTORY, this.history);
+      this.dirty = false;
     }
     return this;
   }
@@ -82,6 +109,11 @@ export class LocationHistory extends FunctionNodeBase {
     return this.filter(person);
   }
 
+  /**
+   * Remove history entries that are older than `tCutoff`.
+   * @param tCutoff
+   * @returns
+   */
   prune(tCutoff: EpochMilliseconds): LocationHistory {
     Object.keys(this.history).forEach((key) => {
       const items = this.history[key];
@@ -99,16 +131,6 @@ export class LocationHistory extends FunctionNodeBase {
         this.dirty = true;
       }
     });
-    return this;
-  }
-
-  flush(): LocationHistory {
-    if (this.dirty) {
-      if (this.setStorage) {
-        this.setStorage(this.GATE_HISTORY, this.history);
-      }
-      this.dirty = false;
-    }
     return this;
   }
 

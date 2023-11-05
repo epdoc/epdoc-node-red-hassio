@@ -1,100 +1,86 @@
-import { NodeRedMessage, NodeRedOptsMock } from 'epdoc-node-red-hautil';
-import { isObject } from 'epdoc-util';
-import { PingContext, pingContextLib } from '../src/ping-context';
+import { NodeRedOptsMock } from 'epdoc-node-red-hautil';
+import { isArray, isObject } from 'epdoc-util';
+import { InputPayload, PingConfig, PingContext } from '../src/ping-context';
 
 describe('ping-context', () => {
-  const tStart = new Date().getTime();
-  const mock: NodeRedOptsMock = new NodeRedOptsMock();
-  mock.setFlow('lib', pingContextLib);
-  let msg: NodeRedMessage = {
-    payload: {
+  describe('group1', () => {
+    const mock: NodeRedOptsMock = new NodeRedOptsMock();
+    const input: InputPayload = {
+      id: 'mytest',
+      name: 'My Test',
       data: [
-        { timeout: 100, hosts: 'facebook' },
-        { timeout: 100, hosts: ['google', 'apple'] }
+        {
+          timeout: 2000,
+          hosts: ['google']
+        },
+        {
+          timeout: 4000,
+          hosts: ['apple']
+        }
       ]
-    }
-  };
-  const responseTimes = {
-    facebook: 200,
-    google: 45,
-    apple: 200
-  };
-  describe('setup', () => {
-    it('setup', () => {
-      let ctx = new PingContext(mock.opts);
+    };
+    mock.db.flow.test = {};
+    let ctx: PingContext;
+    const tNow = new Date().getTime();
+    it('constructor', () => {
+      let rounds = [
+        {
+          hosts: ['google'],
+          responses: 0,
+          timeout: 2000
+        },
+        {
+          hosts: ['apple'],
+          responses: 0,
+          timeout: 4000
+        }
+      ];
+      ctx = new PingContext(mock.opts, input);
       expect(isObject(ctx)).toEqual(true);
+      expect(ctx.short.id).toEqual(input.id);
+      expect(ctx.short.name).toEqual(input.name);
+      expect(ctx.short.busy).toEqual(true);
+      expect(ctx.short.debug).toEqual(false);
+      expect(ctx.short.busyAt).toBeGreaterThan(tNow);
+      expect(ctx.short.busyAt).toBeLessThan(tNow + 100);
+      expect(ctx.short.startDate).toBeGreaterThan(tNow);
+      expect(ctx.short.startDate).toBeLessThan(tNow + 100);
+      expect(ctx.short.rounds).toEqual(rounds);
     });
-
-    it('busy', (done) => {
-      const lib = mock.opts.flow.get('lib');
-      // const oldCtx = lib.newFlowContext().initFromStorage();
-      // let pingNode = new PingNode(responseTimes);
-      // mock.opts.node.send = (arr) => {
-      //   expect(arr).toHaveLength(2);
-      //   if (isArray(arr)) {
-      //     expect(arr[0]).toBeNull();
-      //     const item = arr[1];
-      //     expect(item).toBeDefined();
-      //     expect(isPingNodeInputItem(item)).toEqual(true);
-      //     if (isPingNodeInputItem(item)) {
-      //       pingNode.call(item as PingNodeInputItem).then((resp) => {
-      //         const tNow = new Date().getTime();
-      //         expect(tNow - tStart).toBeGreatherThan(100);
-      //         expect(resp.payload).toEqual(false);
-      //         if (isDict(msg)) {
-      //           msg.payload = resp.payload;
-      //         }
-      //         done();
-      //       });
-      //     }
-      //   }
-      // };
-
-      // if (oldCtx.busy && !oldCtx.busyTimeout()) {
-      //   // skip right to output
-      //   oldCtx.debug &&
-      //     mock.opts.node.warn(`Already busy; ${oldCtx.connectionStatusAsString()}; exit subflow`);
-      //   msg.payload = oldCtx.getReportPayload();
-      //   mock.opts.node.send([msg, null]);
-      // } else {
-      //   // Replaces old short-term context with new short-term context
-      //   const ctx = lib.newFlowContext().initFromPayload(msg.payload);
-      //   ctx.debug &&
-      //     mock.opts.node.warn(
-      //       `Not busy; ${ctx.connectionStatusAsString()}; ping test ${JSON.stringify(
-      //         ctx.getHost(0)
-      //       )}`
-      //     );
-
-      //   msg.payload = ctx.pingPayload(0);
-      //   mock.opts.node.send([null, msg]);
-      // }
-      //mock.opts.node.done();
-      done();
+    it('set busy', () => {
+      ctx.setBusy();
+      expect(ctx.busy).toEqual(true);
+      expect(ctx.hasPingResponded(0)).toEqual(false);
+      expect(ctx.haveAllPingsResponded(0)).toEqual(false);
+      expect(ctx.isFirstRound(0)).toEqual(true);
+      expect(ctx.isLastRound(0)).toEqual(false);
     });
+    it('get ping payload', () => {
+      const expected = [
+        {
+          host: 'google',
+          timeout: 2000,
+          start_date: 1698964169728,
+          id: 'mytest',
+          name: 'My Test',
+          round: 0
+        }
+      ];
+      const p: PingConfig[] = ctx.getPingPayload(0);
+      expect(isArray(p)).toEqual(true);
+      expect(p.length).toEqual(1);
+      expect(p[0].host).toEqual(input.data[0].hosts[0]);
+      expect(p[0].timeout).toEqual(input.data[0].timeout);
+      expect(p[0].start_date).toBeGreaterThan(tNow);
+      expect(p[0].start_date).toBeLessThan(tNow + 100);
+      expect(p[0].id).toEqual(input.id);
+      expect(p[0].name).toEqual(input.name);
+      expect(p[0].round).toEqual(0);
+    });
+    it('test', () => {});
+    it('test', () => {});
+    it('test', () => {});
+    it('test', () => {});
   });
-  /*
-
-  describe.skip('group1', () => {
-    const ctx = mock.opts.flow.get('lib').newFromStorage();
-    const ping = msg.ping;
-    const round = ping.round;
-    let msgs = ['Round ' + round];
-
-    if (ctx.getPingHasResponded(round)) {
-      ctx.debug &&
-        mock.opts.node.warn(
-          `Round ${round}; ignoring later reporting host ${ping.host}; response ${
-            msg.payload ? msg.payload + ' ms' : 'timed out'
-          }`
-        );
-      mock.opts.node.send([null, msg]);
-    } else {
-      mock.opts.node.send([msg, null]);
-    }
-    ctx.incPingHasResponded(round);
-
-    mock.opts.node.done();
-  });
-  */
 });
+``;
