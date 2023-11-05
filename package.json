@@ -1,6 +1,6 @@
 {
   "name": "epdoc-node-red-hassio",
-  "version": "0.16.6",
+  "version": "0.17.1",
   "description": "Node-RED code for my own Home Assistant deployment",
   "private": false,
   "main": "dist/index.js",

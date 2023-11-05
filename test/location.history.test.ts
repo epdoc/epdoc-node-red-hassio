@@ -1,7 +1,8 @@
 import { NodeRedOptsMock } from 'epdoc-node-red-hautil';
+import { Integer } from 'epdoc-util';
 import { LocationHistory } from '../src';
 
-function g(i): string {
+function g(i: Integer): string {
   return String('g' + i);
 }
 

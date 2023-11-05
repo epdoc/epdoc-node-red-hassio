@@ -14,14 +14,7 @@ import {
   newSwitchService
 } from 'epdoc-node-red-hautil';
 import { Milliseconds } from 'epdoc-timeutil';
-import {
-  delayPromise,
-  isFunction,
-  isNonEmptyArray,
-  isNonEmptyString,
-  isNumber,
-  isString
-} from 'epdoc-util';
+import { delayPromise, isFunction, isNonEmptyArray, isNonEmptyString, isNumber, isString } from 'epdoc-util';
 
 const REG = {
   onoff: new RegExp(/^(on|off)$/, 'i')
@@ -53,7 +46,7 @@ export function setFan(params: SetFanParams, fnSend: PayloadSendFunction, opts: 
 
   const DELAY = isNonEmptyArray(params.delay) ? params.delay : [1000, 3000];
 
-  const log = (msg) => {
+  const log = (msg: string) => {
     if (isFunction(opts.node.warn)) {
       return opts.node.warn(msg);
     }
@@ -61,9 +54,7 @@ export function setFan(params: SetFanParams, fnSend: PayloadSendFunction, opts: 
 
   const ha: HA = new HA(opts);
   log(`setFan input params: ${JSON.stringify(params)}`);
-  const bShutoff = isNonEmptyString(params.shutOffEntityId)
-    ? ha.entity(params.shutOffEntityId).isOn()
-    : false;
+  const bShutoff = isNonEmptyString(params.shutOffEntityId) ? ha.entity(params.shutOffEntityId).isOn() : false;
 
   const swutch: Entity = ha.entity(switch_id);
 

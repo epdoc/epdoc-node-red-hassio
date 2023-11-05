@@ -1,11 +1,11 @@
 import { NodeRedOptsMock } from 'epdoc-node-red-hautil';
 import { isArray, isObject } from 'epdoc-util';
-import { InputPayload, PingConfig, PingContext } from '../src/ping-context';
+import { PingContext, PingFlowInputPayload, PingNodeInputItem } from '../src/ping-context';
 
 describe('ping-context', () => {
   describe('group1', () => {
     const mock: NodeRedOptsMock = new NodeRedOptsMock();
-    const input: InputPayload = {
+    const input: PingFlowInputPayload = {
       id: 'mytest',
       name: 'My Test',
       data: [
@@ -45,13 +45,13 @@ describe('ping-context', () => {
       expect(ctx.short.busyAt).toBeLessThan(tNow + 100);
       expect(ctx.short.startDate).toBeGreaterThan(tNow);
       expect(ctx.short.startDate).toBeLessThan(tNow + 100);
-      expect(ctx.short.rounds).toEqual(rounds);
+      expect(ctx.short.loopsData).toEqual(rounds);
     });
     it('set busy', () => {
       ctx.setBusy();
       expect(ctx.busy).toEqual(true);
-      expect(ctx.hasPingResponded(0)).toEqual(false);
-      expect(ctx.haveAllPingsResponded(0)).toEqual(false);
+      expect(ctx.getPingHasResponded(0)).toEqual(false);
+      expect(ctx.getPingAllResponded(0)).toEqual(false);
       expect(ctx.isFirstRound(0)).toEqual(true);
       expect(ctx.isLastRound(0)).toEqual(false);
     });
@@ -66,7 +66,7 @@ describe('ping-context', () => {
           round: 0
         }
       ];
-      const p: PingConfig[] = ctx.getPingPayload(0);
+      const p: PingNodeInputItem[] = ctx.getPingNodeInputPayload(0);
       expect(isArray(p)).toEqual(true);
       expect(p.length).toEqual(1);
       expect(p[0].host).toEqual(input.data[0].hosts[0]);
@@ -75,7 +75,7 @@ describe('ping-context', () => {
       expect(p[0].start_date).toBeLessThan(tNow + 100);
       expect(p[0].id).toEqual(input.id);
       expect(p[0].name).toEqual(input.name);
-      expect(p[0].round).toEqual(0);
+      expect(p[0].loopIndex).toEqual(0);
     });
     it('test', () => {});
     it('test', () => {});

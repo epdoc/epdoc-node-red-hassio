@@ -1,7 +1,7 @@
 import { HA, NodeRedOptsMock } from 'epdoc-node-red-hautil';
 import { setFan } from '../src';
 
-function fnSend(mock, payload) {
+function fnSend(mock: NodeRedOptsMock, payload: any) {
   if (payload.target && payload.target.entity_id) {
     if (payload.service === 'turn_on') {
       mock.setState(payload.target.entity_id, 'on');

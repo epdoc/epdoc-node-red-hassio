@@ -24,8 +24,8 @@ export class LocationHistory extends FunctionNodeBase {
   private GATE_HISTORY = 'gate_history';
   public history: HistoryDict = {};
   private dirty = false;
-  private _storage: Dict;
-  private _storageType: ContextStorageType;
+  private _storage: Dict = {};
+  private _storageType: ContextStorageType = 'memory';
 
   constructor(lopts: LocationHistoryOpts, opts: NodeRedOpts) {
     super(opts);
