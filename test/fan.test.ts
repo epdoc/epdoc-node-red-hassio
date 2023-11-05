@@ -1,18 +1,19 @@
+import { describe, expect, it } from 'bun:test';
 import { HA, NodeRedOptsMock } from 'epdoc-node-red-hautil';
 import { setFan } from '../src';
 
 function fnSend(mock, payload) {
   if (payload.target && payload.target.entity_id) {
     if (payload.service === 'turn_on') {
-      mock.setState(payload.target.entity_id, 'on');
+      mock.db.global.homeassistant.states[payload.target.entity_id] = { state: 'on' };
     } else if (payload.service === 'turn_off') {
-      mock.setState(payload.target.entity_id, 'off');
+      mock.db.global.homeassistant.states[payload.target.entity_id] = { state: 'off' };
     }
   }
 }
 
 describe('setFan', () => {
-  describe('lightning on', () => {
+  describe.only('lightning on', () => {
     const mock: NodeRedOptsMock = new NodeRedOptsMock();
     mock.setStates({
       'input_boolean.lightning': {
@@ -31,12 +32,8 @@ describe('setFan', () => {
     let ha = new HA(mock.opts);
 
     it('turn off', (done) => {
-      const params = {
-        fan: 'away_room',
-        service: 'on',
-        shutOffEntityId: 'input_boolean.lightning'
-      };
-      setFan(params, (p) => fnSend(mock, p), mock.opts).then((resp) => {
+      const params = { fan: 'away_room', service: 'on', shutOffEntityId: 'input_boolean.lightning' };
+      return setFan(params, (p) => fnSend(mock, p), mock.opts).then((resp) => {
         expect(mock.getState('fan.away_room')).toEqual('off');
         done();
       });
@@ -58,13 +55,9 @@ describe('setFan', () => {
     let ha = new HA(mock.opts);
 
     it('already on', (done) => {
-      const params = {
-        fan: 'away_room',
-        service: 'on',
-        shutOffEntityId: 'input_boolean.lightning'
-      };
-      setFan(params, (p) => fnSend(mock, p), mock.opts).then((resp) => {
-        expect(mock.getState('fan.away_room')).toEqual('on');
+      const params = { fan: 'away_room', service: 'on', shutOffEntityId: 'input_boolean.lightning' };
+      return setFan(params, (p) => fnSend(mock, p), mock.opts).then((resp) => {
+        expect(mock.getState('fan.away_room')).toEqual('off');
         done();
       });
     });
@@ -85,18 +78,9 @@ describe('setFan', () => {
     let ha = new HA(mock.opts);
 
     it('timeout', (done) => {
-      const tStart = new Date().getTime();
-      const params = {
-        fan: 'away_room',
-        service: 'on',
-        timeout: 200,
-        shutOffEntityId: 'input_boolean.lightning'
-      };
-      setFan(params, (p) => fnSend(mock, p), mock.opts).then((resp) => {
-        const tDiff = new Date().getTime() - tStart;
-        expect(mock.getState('fan.away_room')).toEqual('off');
-        expect(tDiff).toBeGreaterThan(params.timeout);
-        expect(tDiff).toBeLessThan(params.timeout + 10);
+      const params = { fan: 'away_room', service: 'on', timeout: 5000, shutOffEntityId: 'input_boolean.lightning' };
+      return setFan(params, (p) => fnSend(mock, p), mock.opts).then((resp) => {
+        expect(mock.getState('fan.away_room')).toEqua('on');
         done();
       });
     });

@@ -1,39 +1,5 @@
 {
   "compilerOptions": {
-    "target": "ES2015",
-    "module": "commonjs",
-    "declaration": true,
-    "sourceMap": true,
-    "outDir": "./dist",
-    "esModuleInterop": true
-  },
-
-  "d_compilerOptions": {
-    "target": "es2015",
-    "module": "es2015",
-    "declaration": true,
-    "outDir": "./dist",
-    "noEmit": false,
-    "strict": true,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "strictFunctionTypes": true,
-    "strictBindCallApply": true,
-    "strictPropertyInitialization": true,
-    "noImplicitThis": true,
-    "alwaysStrict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true,
-    "noPropertyAccessFromIndexSignature": true,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true
-  },
-  "c_compilerOptions": {
     "target": "es6",
     "module": "commonjs",
     "declaration": true,
@@ -42,7 +8,7 @@
     "resolveJsonModule": true,
     "esModuleInterop": true
   },
-  "b_compilerOptions": {
+  "y_compilerOptions": {
     "lib": ["ESNext"],
     "module": "esnext",
     "target": "esnext",

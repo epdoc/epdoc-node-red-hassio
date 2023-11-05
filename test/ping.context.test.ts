@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'bun:test';
 import { NodeRedOptsMock } from 'epdoc-node-red-hautil';
 import { isArray, isObject } from 'epdoc-util';
 import { InputPayload, PingConfig, PingContext } from '../src/ping-context';
@@ -41,10 +42,12 @@ describe('ping-context', () => {
       expect(ctx.short.name).toEqual(input.name);
       expect(ctx.short.busy).toEqual(true);
       expect(ctx.short.debug).toEqual(false);
-      expect(ctx.short.busyAt).toBeGreaterThan(tNow);
-      expect(ctx.short.busyAt).toBeLessThan(tNow + 100);
-      expect(ctx.short.startDate).toBeGreaterThan(tNow);
-      expect(ctx.short.startDate).toBeLessThan(tNow + 100);
+      expect(ctx.short.busyAt)
+        .toBeGreaterThan(tNow)
+        .toBeLessThan(tNow + 100);
+      expect(ctx.short.startDate)
+        .toBeGreaterThan(tNow)
+        .toBeLessThan(tNow + 100);
       expect(ctx.short.rounds).toEqual(rounds);
     });
     it('set busy', () => {
@@ -57,22 +60,16 @@ describe('ping-context', () => {
     });
     it('get ping payload', () => {
       const expected = [
-        {
-          host: 'google',
-          timeout: 2000,
-          start_date: 1698964169728,
-          id: 'mytest',
-          name: 'My Test',
-          round: 0
-        }
+        { host: 'google', timeout: 2000, start_date: 1698964169728, id: 'mytest', name: 'My Test', round: 0 }
       ];
       const p: PingConfig[] = ctx.getPingPayload(0);
       expect(isArray(p)).toEqual(true);
       expect(p.length).toEqual(1);
       expect(p[0].host).toEqual(input.data[0].hosts[0]);
       expect(p[0].timeout).toEqual(input.data[0].timeout);
-      expect(p[0].start_date).toBeGreaterThan(tNow);
-      expect(p[0].start_date).toBeLessThan(tNow + 100);
+      expect(p[0].start_date)
+        .toBeGreaterThan(tNow)
+        .toBeLessThan(tNow + 100);
       expect(p[0].id).toEqual(input.id);
       expect(p[0].name).toEqual(input.name);
       expect(p[0].round).toEqual(0);

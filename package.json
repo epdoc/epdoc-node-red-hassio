@@ -1,9 +1,16 @@
 {
   "name": "epdoc-node-red-hassio",
-  "version": "0.16.3",
-  "description": "Node-RED code for my own Home Assistant deployment",
+  "version": "0.16.2",
+  "description": "General Purpose Node-RED utils for Home Assistant",
   "private": false,
+  "modules": "src/index.ts",
+  "type": "module",
   "main": "dist/index.js",
+  "keywords": [
+    "util",
+    "nodered",
+    "homeassistant"
+  ],
   "license": "MIT",
   "author": {
     "name": "James Pravetz",
@@ -11,31 +18,32 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jpravetz/epdoc-node-red-hassio.git"
+    "url": "git+https://github.com/jpravetz/epdoc-node-red-hautil.git"
   },
   "scripts": {
-    "clean": "rm -rf dist docs coverage && echo Done.",
-    "build": "rm -rf dist && tsc",
-    "format": "prettier --write 'src/**/*.ts' 'test/**/*.ts' '*.js' '*.json'",
-    "docs": "./node_modules/typedoc/bin/typedoc",
-    "test": "jest"
+    "build_failed": "bun build ./src/index.ts --target node --outdir ./dist && tsc",
+    "build": "tsc",
+    "clean": "rm -rf dist docs && echo 'Done.'",
+    "coverage": "bun test --coverage",
+    "format": "prettier --write 'src/**/*.ts'",
+    "docs": "./node_modules/typedoc/bin/typedoc"
   },
   "devDependencies": {
-    "@types/jest": "^29.5.5",
-    "@types/node": "^20.8.10",
-    "eslint": "^8.53.0",
+    "bun-types": "latest",
+    "eslint": "^8.52.0",
     "eslint-config-prettier": "^9.0.0",
-    "eslint-plugin-import": "^2.28.1",
+    "eslint-plugin-prettier": "^5.0.0",
     "eslint-plugin-prefer-arrow": "^1.2.3",
     "eslint-plugin-unicorn": "^49.0.0",
-    "jest": "^29.7.0",
     "prettier": "^3.0.3",
-    "ts-jest": "^29.1.1",
-    "typescript": "^5.2.2"
+    "typedoc": "^0.25.3"
   },
   "dependencies": {
-    "epdoc-node-red-hautil": "0.17.2",
-    "epdoc-timeutil": "^2.3.5",
-    "epdoc-util": "^0.5.1"
+    "epdoc-node-red-hautil": "^0.16.5",
+    "epdoc-timeutil": "^2.2.3",
+    "epdoc-util": "^0.2.6"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
   }
 }

@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'bun:test';
 import { NodeRedOptsMock } from 'epdoc-node-red-hautil';
 import { LocationHistory } from '../src';
 
