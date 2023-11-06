@@ -157,6 +157,7 @@ export function newPingContext(opts: NodeRedOpts, payload?: PingFlowInputPayload
  * from the flow's context.
  */
 export class PingContext extends FunctionNodeBase {
+  // @ts-ignore
   private _short: PingContextShort;
   private _long: PingContextLong;
 
@@ -167,42 +168,80 @@ export class PingContext extends FunctionNodeBase {
     if (!isPingContextLong(this._long)) {
       this._long = { down: false, downAt: 0, lastAliveAt: 0, count: 0 };
     }
-    this._short = this.flow.get(SHORT);
-    if (!isPingContextShort(this._short)) {
-      this._short = {
-        debug: this.env.get('AN_DEBUG') === true,
-        id: this.env.get('AN_ID'),
-        name: this.env.get('AN_NAME'),
-        busy: false,
-        busyAt: tNowMs,
-        startDate: tNowMs,
-        loopsData: this.initLoopsDataFromEnv(),
-        reset: false
-      };
+    if (payload) {
+      this.initShortWithDefaults().fixShortFromEnv(tNowMs).overwriteShortFromPayload(payload).saveShort();
+    } else {
+      this.initShortFromStorage().fixShortFromEnv();
     }
-    this.initFromPayload(payload);
   }
 
-  private initFromPayload(payload?: PingFlowInputPayload): this {
-    if (isPingFlowInputPayload(payload)) {
-      const tNowMs = new Date().getTime();
-      this._short.busy = true;
-      this._short.busyAt = tNowMs;
+  private initShortWithDefaults(): this {
+    this._short = {
+      debug: false,
+      id: '',
+      name: '',
+      busy: false,
+      busyAt: 0,
+      startDate: 0,
+      loopsData: this.initLoopsDataFromEnv(),
+      reset: false
+    };
+    return this;
+  }
+
+  private initShortFromStorage(): this {
+    const short: PingContextShort = this.flow.get(SHORT);
+    if (isPingContextShort(short)) {
+      this._short = short;
+    }
+    return this;
+  }
+
+  /**
+   * Correct any short values that were returned with bad data from storage.
+   * @returns
+   */
+  private fixShortFromEnv(tNowMs?: Milliseconds): this {
+    const envDict = {
+      name: this.env.get('AN_NAME'),
+      id: this.env.get('AN_ID'),
+      debug: this.env.get('AN_DEBUG')
+    };
+    if (!isBoolean(this._short.debug) && envDict.debug === true) {
+      this._short.debug = true;
+    }
+    if (!isNonEmptyString(this._short.id) && isNonEmptyString(envDict.id)) {
+      this._short.id = envDict.id;
+    }
+    if (!isNonEmptyString(this._short.name) && isNonEmptyString(envDict.name)) {
+      this._short.name = envDict.name;
+    }
+    if (!isNonEmptyArray(this._short.loopsData)) {
+      this._short.loopsData = this.initLoopsDataFromEnv();
+    }
+    if (tNowMs) {
       this._short.startDate = tNowMs;
-      if (payload.reset === true) {
-        this._short.reset = true;
-      }
-      if (isNonEmptyString(payload.id)) {
-        this._short.id = payload.id;
-      }
-      if (isNonEmptyString(payload.name)) {
-        this._short.name = payload.name;
-      }
-      if (isNonEmptyArray(payload.data)) {
-        this._short.loopsData = this.initLoopsDataFromPayload(payload.data);
-      }
-      const id: EntityShortId = payload.id ? payload.id : this._short.id;
-      this.saveShort();
+      this._short.busyAt = tNowMs;
+    }
+    return this;
+  }
+
+  private overwriteShortFromPayload(payload: PingFlowInputPayload): this {
+    this._short.busy = true;
+    if (payload.reset === true) {
+      this._short.reset = true;
+    }
+    if (isNonEmptyString(payload.id)) {
+      this._short.id = payload.id;
+    }
+    if (isNonEmptyString(payload.name)) {
+      this._short.name = payload.name;
+    }
+    if (isNonEmptyArray(payload.data)) {
+      this._short.loopsData = this.initLoopsDataFromPayload(payload.data);
+    }
+    if (this.debug) {
+      this.node.warn(`Init from payload, busy is ${this._short.busy}`);
     }
     return this;
   }
@@ -297,6 +336,10 @@ export class PingContext extends FunctionNodeBase {
 
   get reset(): boolean {
     return this._short.reset === true;
+  }
+  set reset(val: boolean) {
+    this._short.reset = true;
+    this.saveShort();
   }
   get name(): string {
     return this._short.name;
