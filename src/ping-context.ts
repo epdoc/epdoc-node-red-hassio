@@ -1,6 +1,7 @@
 import { FunctionNodeBase, NodeRedOpts } from 'epdoc-node-red-hautil';
 import { DateUtil, EpochMilliseconds, Milliseconds, durationUtil, isEpochMilliseconds } from 'epdoc-timeutil';
 import {
+  Dict,
   Integer,
   isArray,
   isBoolean,
@@ -121,6 +122,8 @@ export type PingReport = {
   busy?: boolean;
   // If true then this flow had a ping timeout
   timeout?: boolean;
+  // If set then an error distrupted flow
+  error?: string;
 };
 
 /**
@@ -135,6 +138,7 @@ export type PingContextShort = {
   startDate: EpochMilliseconds;
   loopsData: PingLoopData[];
   reset?: boolean;
+  error?: string;
 };
 function isPingContextShort(val: any): val is PingContextShort {
   return (
@@ -177,6 +181,7 @@ export class PingContext extends FunctionNodeBase {
   private _short: PingContextShort;
   // @ts-ignore
   private _long: PingContextLong;
+  private _errors: Dict = {};
 
   constructor(opts?: NodeRedOpts, payload?: PingFlowInputPayload) {
     super(opts);
@@ -186,10 +191,17 @@ export class PingContext extends FunctionNodeBase {
 
     this.initShortWithDefaults();
     if (payload) {
-      this.fixShortFromEnv(tNowMs).overwriteShortFromPayload(payload).saveShort();
+      this.fixShortFromEnv(tNowMs).overwriteShortFromPayload(payload).saveShort().validateLoopsData();
     } else {
-      this.initShortFromStorage().fixShortFromEnv();
+      this.initShortFromStorage().fixShortFromEnv().validateLoopsData();
     }
+  }
+
+  private validateLoopsData(): this {
+    if (this._short.loopsData.length < 1) {
+      this.node.error('Input IP Addresses or hostnames not configured correctly');
+    }
+    return this;
   }
 
   private initLongWithDefaults(): this {
@@ -313,9 +325,6 @@ export class PingContext extends FunctionNodeBase {
         }
       }
     }
-    if (results.length < 2) {
-      this.node.error('IP Addresses or hostnames not configured correctly');
-    }
     return results;
   }
 
@@ -351,8 +360,6 @@ export class PingContext extends FunctionNodeBase {
         };
         return item;
       }
-    } else {
-      this.node.error('IP Addresses or hostnames not configured correctly');
     }
   }
 
@@ -472,7 +479,7 @@ export class PingContext extends FunctionNodeBase {
   setUp(tMs: EpochMilliseconds): PingContext {
     this._long = {
       down: false,
-      count: 1 // XXXX
+      count: 0
     };
     if (tMs) {
       this._long.lastAliveAt = tMs;
@@ -554,13 +561,13 @@ export class PingContext extends FunctionNodeBase {
       if (params.timeout) {
         result.timeout = true;
       }
+      if (this.lastAliveAt()) {
+        result.machine.last_alive_at = this.lastAliveAt();
+        result.user.last_alive_at = new DateUtil(result.machine.last_alive_at).toISOLocaleString();
+      }
       if ((this.isDown() && params.ping && params.ping.loopIndex === 0) || params.endAt || params.timeout) {
         result.machine.down_start_at = this.downAt();
         result.user.down_start_at = new DateUtil(result.machine.down_start_at).toISOLocaleString();
-        if (this.lastAliveAt()) {
-          result.machine.last_alive_at = this.lastAliveAt();
-          result.user.last_alive_at = new DateUtil(result.machine.last_alive_at).toISOLocaleString();
-        }
       }
       if (params.endAt) {
         result.machine.down_end_at = params.endAt;
@@ -573,8 +580,6 @@ export class PingContext extends FunctionNodeBase {
           result.loop_index = params.ping.loopIndex;
         }
         if (this.lastAliveAt()) {
-          result.machine.last_alive_at = this.lastAliveAt();
-          result.user.last_alive_at = new DateUtil(result.machine.last_alive_at).toISOLocaleString();
           result.machine.max_down_time = params.endAt - this.lastAliveAt();
           result.user.max_down_time = this.durationString(result.machine.max_down_time);
         }
