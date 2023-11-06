@@ -22,19 +22,19 @@ describe('ping-context', () => {
     mock.db.flow.test = {};
     let ctx: PingContext;
     const tNow = new Date().getTime();
+    let rounds = [
+      {
+        hosts: ['google'],
+        responses: 0,
+        timeout: 2000
+      },
+      {
+        hosts: ['apple'],
+        responses: 0,
+        timeout: 4000
+      }
+    ];
     it('constructor', () => {
-      let rounds = [
-        {
-          hosts: ['google'],
-          responses: 0,
-          timeout: 2000
-        },
-        {
-          hosts: ['apple'],
-          responses: 0,
-          timeout: 4000
-        }
-      ];
       ctx = new PingContext(mock.opts, input);
       expect(isObject(ctx)).toEqual(true);
       expect(ctx.short.id).toEqual(input.id);
@@ -69,7 +69,9 @@ describe('ping-context', () => {
       const p: PingNodeInputItem[] = ctx.getPingNodeInputPayload(0);
       expect(isArray(p)).toEqual(true);
       expect(p.length).toEqual(1);
+      // @ts-ignore
       expect(p[0].host).toEqual(input.data[0].hosts[0]);
+      // @ts-ignore
       expect(p[0].timeout).toEqual(input.data[0].timeout);
       expect(p[0].start_date).toBeGreaterThan(tNow);
       expect(p[0].start_date).toBeLessThan(tNow + 100);

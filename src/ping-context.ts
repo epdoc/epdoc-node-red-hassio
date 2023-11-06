@@ -71,7 +71,9 @@ export type PingFlowInputPayload = {
   debug?: boolean;
   name: string;
   id: EntityShortId;
-  data: PingFlowInputLoopPayload[];
+  data?: PingFlowInputLoopPayload[];
+  // If true then do a memory reset and exit
+  reset?: boolean;
 };
 
 export function isPingFlowInputPayload(val: any): val is PingFlowInputLoopPayload {
@@ -101,6 +103,8 @@ export type PingReport = {
   max_down_time?: Milliseconds;
   friendly_max_down_time?: string;
   host?: HOST;
+  // If true then we did a memory reset operation and that is all
+  reset?: boolean;
 };
 
 /**
@@ -114,6 +118,7 @@ export type PingContextShort = {
   busyAt: EpochMilliseconds;
   startDate: EpochMilliseconds;
   loopsData: PingLoopData[];
+  reset?: boolean;
 };
 function isPingContextShort(val: any): val is PingContextShort {
   return (
@@ -157,6 +162,7 @@ export class PingContext extends FunctionNodeBase {
 
   constructor(opts?: NodeRedOpts, payload?: PingFlowInputPayload) {
     super(opts);
+    const tNowMs = new Date().getTime();
     this._long = this.flow.get(LONG, 'file') as PingContextLong;
     if (!isPingContextLong(this._long)) {
       this._long = { down: false, downAt: 0, lastAliveAt: 0, count: 0 };
@@ -168,20 +174,24 @@ export class PingContext extends FunctionNodeBase {
         id: this.env.get('AN_ID'),
         name: this.env.get('AN_NAME'),
         busy: false,
-        busyAt: 0,
-        startDate: 0,
-        loopsData: this.initLoopsDataFromEnv()
+        busyAt: tNowMs,
+        startDate: tNowMs,
+        loopsData: this.initLoopsDataFromEnv(),
+        reset: false
       };
     }
     this.initFromPayload(payload);
   }
 
-  initFromPayload(payload?: PingFlowInputPayload): this {
+  private initFromPayload(payload?: PingFlowInputPayload): this {
     if (isPingFlowInputPayload(payload)) {
       const tNowMs = new Date().getTime();
       this._short.busy = true;
       this._short.busyAt = tNowMs;
       this._short.startDate = tNowMs;
+      if (payload.reset === true) {
+        this._short.reset = true;
+      }
       if (isNonEmptyString(payload.id)) {
         this._short.id = payload.id;
       }
@@ -192,7 +202,7 @@ export class PingContext extends FunctionNodeBase {
         this._short.loopsData = this.initLoopsDataFromPayload(payload.data);
       }
       const id: EntityShortId = payload.id ? payload.id : this._short.id;
-      this._saveShort();
+      this.saveShort();
     }
     return this;
   }
@@ -240,7 +250,7 @@ export class PingContext extends FunctionNodeBase {
 
   private initLoopData(hosts: string | string[], timeout: Milliseconds): PingLoopData | undefined {
     if (!isNonEmptyArray(hosts) && isNonEmptyString(hosts)) {
-      hosts = this._commaList(hosts);
+      hosts = this.commaList(hosts);
     }
     if (isNonEmptyArray(hosts)) {
       let filtered: HOST[] = [];
@@ -262,7 +272,7 @@ export class PingContext extends FunctionNodeBase {
     }
   }
 
-  _commaList(s: string): string[] {
+  private commaList(s: string): string[] {
     return s.split(',').map((item) => {
       return item.trim();
     });
@@ -274,11 +284,20 @@ export class PingContext extends FunctionNodeBase {
   //     return this;
   // }
 
-  _saveShort() {
+  private saveShort(): this {
     this.flow.set(SHORT, this._short);
     return this;
   }
 
+  clearMemory(): this {
+    this.flow.set(SHORT, undefined);
+    this.flow.set(LONG, undefined);
+    return this;
+  }
+
+  get reset(): boolean {
+    return this._short.reset === true;
+  }
   get name(): string {
     return this._short.name;
   }
@@ -289,12 +308,12 @@ export class PingContext extends FunctionNodeBase {
 
   setBusy(val: boolean = true) {
     this._short.busy = val;
-    return this._saveShort();
+    return this.saveShort();
   }
 
   clearBusy() {
     this._short.busy = false;
-    return this._saveShort();
+    return this.saveShort();
   }
 
   getLoopData(index: PingLoopIndex): PingLoopData {
@@ -331,7 +350,7 @@ export class PingContext extends FunctionNodeBase {
   incPingHasResponded(loop: PingLoopIndex): PingContext {
     let item = this.getLoopData(loop);
     item.responses = item.responses + 1;
-    return this._saveShort();
+    return this.saveShort();
   }
 
   isFirstRound(loop: PingLoopIndex): boolean {
@@ -353,7 +372,7 @@ export class PingContext extends FunctionNodeBase {
   }
   setStartDate(val: EpochMilliseconds) {
     this._short.startDate = val;
-    return this._saveShort();
+    return this.saveShort();
   }
   isUp(): boolean {
     return this.isDown() ? false : true;
@@ -375,7 +394,7 @@ export class PingContext extends FunctionNodeBase {
     if (tMs) {
       this._long.lastAliveAt = tMs;
     }
-    return this._saveLong();
+    return this.saveLong();
   }
 
   setDownAt(downAtMs: EpochMilliseconds) {
@@ -385,7 +404,7 @@ export class PingContext extends FunctionNodeBase {
       downAt: tMs,
       count: 1
     };
-    return this._saveLong();
+    return this.saveLong();
   }
 
   /**
@@ -393,18 +412,18 @@ export class PingContext extends FunctionNodeBase {
    */
   incrementDownCounter() {
     this._long.count = this._long.count + 1;
-    return this._saveLong();
+    return this.saveLong();
   }
   get count() {
     return this._long.count;
   }
 
-  _saveLong() {
+  private saveLong() {
     this.flow.set(LONG, this._long, 'file');
     return this;
   }
 
-  _pingPayloadItem(
+  private pingPayloadItem(
     host: HOST,
     timeout: Milliseconds,
     tStartMs: EpochMilliseconds,
@@ -425,7 +444,7 @@ export class PingContext extends FunctionNodeBase {
     const tStartMs = new Date().getTime();
     let result: PingNodeInputItem[] = [];
     item.hosts.forEach((host) => {
-      result.push(this._pingPayloadItem(host, item.timeout, tStartMs, loop));
+      result.push(this.pingPayloadItem(host, item.timeout, tStartMs, loop));
     });
     return result;
   }
@@ -439,24 +458,28 @@ export class PingContext extends FunctionNodeBase {
       name: this._short.name,
       down_count: this._long.count
     };
-    if ((this.isDown() && ping && ping.loopIndex === 0) || tEndMs) {
-      result.start_date = this.downAt();
-      if (this.lastAliveAt()) {
-        result.last_alive_at = this.lastAliveAt();
+    if (this._short.reset) {
+      result.reset = true;
+    } else {
+      if ((this.isDown() && ping && ping.loopIndex === 0) || tEndMs) {
+        result.start_date = this.downAt();
+        if (this.lastAliveAt()) {
+          result.last_alive_at = this.lastAliveAt();
+        }
       }
-    }
-    if (tEndMs) {
-      result.end_date = tEndMs;
-      result.down_time = tEndMs - this.downAt();
-      result.friendly_down_time = this.durationString(result.down_time);
-      delete result.down_count;
-      if (ping) {
-        result.host = ping.host;
-      }
-      if (this.lastAliveAt()) {
-        result.last_alive_at = this.lastAliveAt();
-        result.max_down_time = tEndMs - this.lastAliveAt();
-        result.friendly_max_down_time = this.durationString(result.max_down_time);
+      if (tEndMs) {
+        result.end_date = tEndMs;
+        result.down_time = tEndMs - this.downAt();
+        result.friendly_down_time = this.durationString(result.down_time);
+        delete result.down_count;
+        if (ping) {
+          result.host = ping.host;
+        }
+        if (this.lastAliveAt()) {
+          result.last_alive_at = this.lastAliveAt();
+          result.max_down_time = tEndMs - this.lastAliveAt();
+          result.friendly_max_down_time = this.durationString(result.max_down_time);
+        }
       }
     }
     return result;
