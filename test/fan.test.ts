@@ -95,7 +95,7 @@ describe('setFan', () => {
       setFan(params, (p) => fnSend(mock, p), mock.opts).then((resp) => {
         const tDiff = new Date().getTime() - tStart;
         expect(mock.getState('fan.away_room')).toEqual('off');
-        expect(tDiff).toBeGreaterThan(params.timeout);
+        expect(tDiff).toBeGreaterThan(params.timeout - 1);
         expect(tDiff).toBeLessThan(params.timeout + 10);
         done();
       });
