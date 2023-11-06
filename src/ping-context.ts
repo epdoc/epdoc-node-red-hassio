@@ -1,5 +1,5 @@
 import { FunctionNodeBase, NodeRedOpts } from 'epdoc-node-red-hautil';
-import { EpochMilliseconds, Milliseconds, durationUtil } from 'epdoc-timeutil';
+import { DateUtil, EpochMilliseconds, Milliseconds, durationUtil, isEpochMilliseconds } from 'epdoc-timeutil';
 import {
   Integer,
   isArray,
@@ -88,23 +88,39 @@ export function isPingFlowInputPayload(val: any): val is PingFlowInputLoopPayloa
   return false;
 }
 
+export type ReportParams = {
+  reset?: boolean;
+  busy?: boolean;
+  timeout?: true;
+  endAt?: EpochMilliseconds;
+  ping: PingNodeInputItem;
+};
+
+export type PingReportTimes = {
+  down_start_at?: EpochMilliseconds | string;
+  last_alive_at?: EpochMilliseconds | string;
+  down_end_at?: EpochMilliseconds | string;
+  down_time?: Milliseconds | string;
+  max_down_time?: Milliseconds | string;
+};
+
 /**
  * The output msg.payload from the flow
  */
 export type PingReport = {
   id: EntityShortId;
   name: string;
-  down_count?: Integer;
-  start_date?: EpochMilliseconds;
-  last_alive_at?: EpochMilliseconds;
-  end_date?: EpochMilliseconds;
-  down_time?: Milliseconds;
-  friendly_down_time?: string;
-  max_down_time?: Milliseconds;
-  friendly_max_down_time?: string;
+  down_flow_count?: Integer;
+  machine?: PingReportTimes;
+  user?: PingReportTimes;
+  loop_index?: Integer;
   host?: HOST;
   // If true then we did a memory reset operation and that is all
   reset?: boolean;
+  // If true there was a previous flow still running, so we bailed
+  busy?: boolean;
+  // If true then this flow had a ping timeout
+  timeout?: boolean;
 };
 
 /**
@@ -159,20 +175,52 @@ export function newPingContext(opts: NodeRedOpts, payload?: PingFlowInputPayload
 export class PingContext extends FunctionNodeBase {
   // @ts-ignore
   private _short: PingContextShort;
+  // @ts-ignore
   private _long: PingContextLong;
 
   constructor(opts?: NodeRedOpts, payload?: PingFlowInputPayload) {
     super(opts);
     const tNowMs = new Date().getTime();
-    this._long = this.flow.get(LONG, 'file') as PingContextLong;
-    if (!isPingContextLong(this._long)) {
-      this._long = { down: false, downAt: 0, lastAliveAt: 0, count: 0 };
-    }
+
+    this.initLongWithDefaults().initLongFromStorage();
+
+    this.initShortWithDefaults();
     if (payload) {
-      this.initShortWithDefaults().fixShortFromEnv(tNowMs).overwriteShortFromPayload(payload).saveShort();
+      this.fixShortFromEnv(tNowMs).overwriteShortFromPayload(payload).saveShort();
     } else {
       this.initShortFromStorage().fixShortFromEnv();
     }
+  }
+
+  private initLongWithDefaults(): this {
+    this._long = {
+      down: false,
+      downAt: 0,
+      lastAliveAt: 0,
+      count: 0
+    };
+    return this;
+  }
+
+  private initLongFromStorage(): this {
+    const long: PingContextLong = this.flow.get(LONG, 'file');
+    if (isPingContextShort(long)) {
+      this._long = long;
+    } else if (isDict(long)) {
+      if (isBoolean(long.down)) {
+        this._long.down = long.down;
+      }
+      if (isEpochMilliseconds(long.downAt)) {
+        this._long.downAt = long.downAt;
+      }
+      if (isEpochMilliseconds(long.lastAliveAt)) {
+        this._long.lastAliveAt = long.lastAliveAt;
+      }
+      if (isInteger(long.count)) {
+        this._long.count = long.count;
+      }
+    }
+    return this;
   }
 
   private initShortWithDefaults(): this {
@@ -183,7 +231,7 @@ export class PingContext extends FunctionNodeBase {
       busy: false,
       busyAt: 0,
       startDate: 0,
-      loopsData: this.initLoopsDataFromEnv(),
+      loopsData: [],
       reset: false
     };
     return this;
@@ -207,7 +255,7 @@ export class PingContext extends FunctionNodeBase {
       id: this.env.get('AN_ID'),
       debug: this.env.get('AN_DEBUG')
     };
-    if (!isBoolean(this._short.debug) && envDict.debug === true) {
+    if (envDict.debug === true) {
       this._short.debug = true;
     }
     if (!isNonEmptyString(this._short.id) && isNonEmptyString(envDict.id)) {
@@ -239,9 +287,6 @@ export class PingContext extends FunctionNodeBase {
     }
     if (isNonEmptyArray(payload.data)) {
       this._short.loopsData = this.initLoopsDataFromPayload(payload.data);
-    }
-    if (this.debug) {
-      this.node.warn(`Init from payload, busy is ${this._short.busy}`);
     }
     return this;
   }
@@ -317,12 +362,6 @@ export class PingContext extends FunctionNodeBase {
     });
   }
 
-  // initFromStorage(): this {
-  //   this._short = this.flow.get(SHORT) as PingContextShort,
-  //     this._long = this.flow.get(LONG, 'file') as PingContextLong
-  //     return this;
-  // }
-
   private saveShort(): this {
     this.flow.set(SHORT, this._short);
     return this;
@@ -363,8 +402,9 @@ export class PingContext extends FunctionNodeBase {
     return this._short.loopsData ? this._short.loopsData[index] : ({} as PingLoopData);
   }
 
-  getHosts(index: PingLoopIndex): HOST | HOST[] {
-    return this.getLoopData(index).hosts;
+  getHosts(index: PingLoopIndex): HOST | HOST[] | undefined {
+    const loopData = this.getLoopData(index);
+    return loopData ? loopData.hosts : undefined;
   }
 
   busyTimeout() {
@@ -421,7 +461,7 @@ export class PingContext extends FunctionNodeBase {
     return this.isDown() ? false : true;
   }
   isDown(): boolean {
-    return this._long.down == true;
+    return this._long.down === true;
   }
   downAt(): EpochMilliseconds {
     return this._long.downAt || 0;
@@ -442,10 +482,12 @@ export class PingContext extends FunctionNodeBase {
 
   setDownAt(downAtMs: EpochMilliseconds) {
     let tMs = downAtMs ? downAtMs : new Date().getTime();
+    const lastAliveAt = this._long.lastAliveAt ? this._long.lastAliveAt : 0;
     this._long = {
       down: true,
       downAt: tMs,
-      count: 1
+      count: 1,
+      lastAliveAt: lastAliveAt
     };
     return this.saveLong();
   }
@@ -495,33 +537,46 @@ export class PingContext extends FunctionNodeBase {
   /**
    * Set tEndMs if the connection has been restablished at this time
    */
-  getReportPayload(tEndMs: EpochMilliseconds, ping: PingNodeInputItem): PingReport {
+  // getReportPayload(tEndMs: EpochMilliseconds, ping: PingNodeInputItem): PingReport {
+  getReportPayload(params: ReportParams): PingReport {
     let result: PingReport = {
       id: this._short.id,
-      name: this._short.name,
-      down_count: this._long.count
+      name: this._short.name
     };
-    if (this._short.reset) {
+    if (this._short.reset || params.reset) {
       result.reset = true;
+    } else if (params.busy) {
+      result.busy = true;
     } else {
-      if ((this.isDown() && ping && ping.loopIndex === 0) || tEndMs) {
-        result.start_date = this.downAt();
+      result.machine = {};
+      result.user = {};
+      result.down_flow_count = this._long.count;
+      if (params.timeout) {
+        result.timeout = true;
+      }
+      if ((this.isDown() && params.ping && params.ping.loopIndex === 0) || params.endAt || params.timeout) {
+        result.machine.down_start_at = this.downAt();
+        result.user.down_start_at = new DateUtil(result.machine.down_start_at).toISOLocaleString();
         if (this.lastAliveAt()) {
-          result.last_alive_at = this.lastAliveAt();
+          result.machine.last_alive_at = this.lastAliveAt();
+          result.user.last_alive_at = new DateUtil(result.machine.last_alive_at).toISOLocaleString();
         }
       }
-      if (tEndMs) {
-        result.end_date = tEndMs;
-        result.down_time = tEndMs - this.downAt();
-        result.friendly_down_time = this.durationString(result.down_time);
-        delete result.down_count;
-        if (ping) {
-          result.host = ping.host;
+      if (params.endAt) {
+        result.machine.down_end_at = params.endAt;
+        result.user.down_end_at = new DateUtil(result.machine.down_end_at).toISOLocaleString();
+        result.machine.down_time = params.endAt - this.downAt();
+        result.user.down_time = this.durationString(result.machine.down_time);
+        delete result.down_flow_count;
+        if (params.ping) {
+          result.host = params.ping.host;
+          result.loop_index = params.ping.loopIndex;
         }
         if (this.lastAliveAt()) {
-          result.last_alive_at = this.lastAliveAt();
-          result.max_down_time = tEndMs - this.lastAliveAt();
-          result.friendly_max_down_time = this.durationString(result.max_down_time);
+          result.machine.last_alive_at = this.lastAliveAt();
+          result.user.last_alive_at = new DateUtil(result.machine.last_alive_at).toISOLocaleString();
+          result.machine.max_down_time = params.endAt - this.lastAliveAt();
+          result.user.max_down_time = this.durationString(result.machine.max_down_time);
         }
       }
     }

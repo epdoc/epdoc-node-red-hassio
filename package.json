@@ -34,8 +34,8 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "epdoc-node-red-hautil": "0.17.2",
-    "epdoc-timeutil": "^2.3.5",
+    "epdoc-node-red-hautil": "0.17.3",
+    "epdoc-timeutil": "^2.3.6",
     "epdoc-util": "^0.5.1"
   }
 }
