@@ -1,4 +1,4 @@
-import { FunctionNodeBase, NodeRedOpts } from 'epdoc-node-red-hautil';
+import { FunctionNodeBase, NodeRedContextApi, NodeRedGlobalApi } from 'epdoc-node-red-hautil';
 import { DateUtil, EpochMilliseconds, Milliseconds, durationUtil, isEpochMilliseconds } from 'epdoc-timeutil';
 import {
   Dict,
@@ -166,10 +166,6 @@ function isPingContextLong(val: any): val is PingContextLong {
   );
 }
 
-export function newPingContext(opts: NodeRedOpts, payload?: PingFlowInputPayload): PingContext {
-  return new PingContext(opts, payload);
-}
-
 /**
  * A context and logic to use across all Function Nodes in a network
  * connectivity test flow. The context is initialized using the flow's input
@@ -183,8 +179,8 @@ export class PingContext extends FunctionNodeBase {
   private _long: PingContextLong;
   private _errors: Dict = {};
 
-  constructor(opts?: NodeRedOpts, payload?: PingFlowInputPayload) {
-    super(opts);
+  constructor(global: NodeRedGlobalApi, contextApi: NodeRedContextApi, payload?: PingFlowInputPayload) {
+    super(global, contextApi);
     const tNowMs = new Date().getTime();
 
     this.initLongWithDefaults().initLongFromStorage();
@@ -195,6 +191,14 @@ export class PingContext extends FunctionNodeBase {
     } else {
       this.initShortFromStorage().fixShortFromEnv().validateLoopsData();
     }
+    this.validateShortData();
+  }
+
+  private validateShortData(): this {
+    if (!isNonEmptyString(this._short.name) || !isNonEmptyString(this._short.id)) {
+      this.node.error('Input name or ID not configured correctly');
+    }
+    return this;
   }
 
   private validateLoopsData(): this {

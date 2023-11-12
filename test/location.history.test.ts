@@ -1,19 +1,31 @@
-import { NodeRedOptsMock } from 'epdoc-node-red-hautil';
+import {
+  NodeRedContextApi,
+  NodeRedEnvMock,
+  NodeRedFlowMock,
+  NodeRedGlobalMock,
+  NodeRedNodeMock
+} from 'epdoc-node-red-hautil';
 import { Integer } from 'epdoc-util';
-import { LocationHistory } from '../src';
+import { NodeRedFlowFactory } from '../src';
 
 function g(i: Integer): string {
   return String('g' + i);
 }
 
 describe('LocationHistory', () => {
-  const mock: NodeRedOptsMock = new NodeRedOptsMock();
+  const gMock: NodeRedGlobalMock = new NodeRedGlobalMock();
+  const factory = new NodeRedFlowFactory(gMock);
+  const oMock: NodeRedContextApi = {
+    env: new NodeRedEnvMock(),
+    flow: new NodeRedFlowMock(),
+    node: new NodeRedNodeMock()
+  };
 
   const tNow = new Date().getTime();
   const LOCATIONS = [];
 
   describe('basic', () => {
-    let history = new LocationHistory({ context: 'flow' }, mock.opts);
+    let history = factory.makieLocationHistory(oMock, { context: 'flow' });
     it('find none', () => {
       let f = history.filter('bob');
       expect(f.found()).toEqual(false);
@@ -172,19 +184,23 @@ describe('LocationHistory', () => {
       expect(filter.numFound()).toEqual(0);
     });
     it('pre flush raw', () => {
-      expect(mock.db.flow.gate_history).toBeUndefined();
+      const h = oMock.flow.get('gate_history');
+      expect(h).toBeUndefined();
     });
     it('flush raw', () => {
       history.add('bob', g(2), tNow + 6000);
       history.flush();
-      expect(mock.db.flow.gate_history).toBeDefined();
-      expect(mock.db.flow.gate_history.bob).toHaveLength(2);
+      const h = oMock.flow.get('gate_history');
+      expect(h).toBeDefined();
+      expect(h.bob).toHaveLength(2);
     });
     it('read', () => {
       history.flush();
       history.history = {};
       history.read();
-      expect(mock.db.flow.gate_history.bob).toHaveLength(2);
+      const h = oMock.flow.get('gate_history');
+      expect(h).toBeDefined();
+      expect(h.bob).toHaveLength(2);
       let f = history
         .filter('bob')
         .cutoff(tNow - 10000)

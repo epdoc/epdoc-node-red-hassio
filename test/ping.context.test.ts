@@ -1,10 +1,23 @@
-import { NodeRedOptsMock } from 'epdoc-node-red-hautil';
+import {
+  NodeRedContextApi,
+  NodeRedEnvMock,
+  NodeRedFlowMock,
+  NodeRedGlobalMock,
+  NodeRedNodeMock
+} from 'epdoc-node-red-hautil';
 import { isArray, isObject } from 'epdoc-util';
+import { NodeRedFlowFactory, NodeRedNodeFactory } from '../src';
 import { PingContext, PingFlowInputPayload, PingNodeInputItem } from '../src/ping-context';
 
 describe('ping-context', () => {
   describe('data set 1', () => {
-    const mock: NodeRedOptsMock = new NodeRedOptsMock();
+    const gMock: NodeRedGlobalMock = new NodeRedGlobalMock();
+    const oMock: NodeRedContextApi = {
+      env: new NodeRedEnvMock(),
+      flow: new NodeRedFlowMock(),
+      node: new NodeRedNodeMock()
+    };
+    const pingFactory: NodeRedNodeFactory = new NodeRedNodeFactory(gMock, oMock.flow, oMock.env);
     const input: PingFlowInputPayload = {
       id: 'mytest',
       name: 'My Test',
@@ -19,7 +32,7 @@ describe('ping-context', () => {
         }
       ]
     };
-    mock.db.flow.test = {};
+    oMock.flow.set('test', {});
     let ctx: PingContext;
     const tNow = new Date().getTime();
     let rounds = [
@@ -35,7 +48,7 @@ describe('ping-context', () => {
       }
     ];
     it('constructor', () => {
-      ctx = new PingContext(mock.opts, input);
+      ctx = pingFactory.makePingContext(oMock.node, input);
       expect(isObject(ctx)).toEqual(true);
       expect(ctx.short.id).toEqual(input.id);
       expect(ctx.short.name).toEqual(input.name);
@@ -85,7 +98,14 @@ describe('ping-context', () => {
     it('test', () => {});
   });
   describe('data set 2', () => {
-    const mock: NodeRedOptsMock = new NodeRedOptsMock();
+    const gMock: NodeRedGlobalMock = new NodeRedGlobalMock();
+    const oMock: NodeRedContextApi = {
+      env: new NodeRedEnvMock(),
+      flow: new NodeRedFlowMock(),
+      node: new NodeRedNodeMock()
+    };
+    const pingFactory: NodeRedFlowFactory = new NodeRedFlowFactory(gMock);
+
     const input: PingFlowInputPayload = {
       id: 'mytest',
       name: 'My Test',
@@ -104,7 +124,7 @@ describe('ping-context', () => {
         }
       ]
     };
-    mock.db.flow.test = {};
+    oMock.flow.set('test', {});
     let ctx: PingContext;
     const tNow = new Date().getTime();
     const expectedRounds = [
@@ -126,7 +146,7 @@ describe('ping-context', () => {
     ];
 
     it('constructor', () => {
-      ctx = new PingContext(mock.opts, input);
+      ctx = pingFactory.makePingContext(oMock, input);
       expect(isObject(ctx)).toEqual(true);
       expect(ctx.short.id).toEqual(input.id);
       expect(ctx.short.name).toEqual(input.name);

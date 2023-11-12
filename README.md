@@ -34,8 +34,18 @@ Perhaps the most predictable way to install this package with Home Assistant is
 to add this dependency to the Node-RED `package.json` file and restart Node-RED.
 Node-RED is restarted from _Settings > Add-ons > Node-Red_. The restart should
 cause the module to be installed and available. For module updates you can edit
-the version number in `package.json`, delete
-`node_modules/epdoc-node-red-hautil`, then restart Node-RED.
+the version number in `package.json`, delete the corresponding folder under
+`node_modules`, then restart Node-RED.
+
+```json
+    "dependencies": {
+        "epdoc-node-red-hassio": "^0.19.2",
+        "epdoc-node-red-hautil": "^0.17.6",
+        "epdoc-timeutil": "^2.3.6",
+        "epdoc-util": "^0.5.1",
+        ...
+    }    
+```
 
 For convenience you can add the module to globals, so that you don't need
 to specify the module in each `Function Node` where it is used.  Here are the
@@ -44,40 +54,83 @@ required changes to `/config/Node-RED/settings.json` for this to work:
 ```js
 // Don't set module.exports yet
 let settings = {
+
+  ...
   
-  // No need to touch any of the settings 
+  functionGlobalContext: {
+    // os:require('os'),
+    "epdoc-util": require('epdoc-util'),
+    "epdoc-timeutil": require('epdoc-timeutil'),
+    "epdoc-node-red-hautil": require('epdoc-node-red-hautil'),
+    "epdoc-node-red-hassio": require('epdoc-node-red-hassio')
+  },
+
+  ...
 
 };
-
-// Must use dynamic import because of the nature of how bun generates this module
-async function loadModules() {
-  const utils = await import('epdoc-node-red-hautil');
-  settings.functionGlobalContext['epdoc-node-red-hautil'] = utils;
-}
-
-loadModules();
 
 module.exports = settings;
 ```
 
-Then, to use the following code in a [Function
-Node](https://nodered.org/docs/user-guide/writing-functions), it's simply a matter of
-accessing the global context to get the module. In this example, the Function
-Node has two outputs, with the 2nd output wired to a [Call Service
+A convenient way of making these modules available in Function Nodes is to
+initialize them in a launch-time script. Here is an example of such a script.
+Paste this code into a Function Node and use an inject node to execute the
+function. The inject node should be set to _inject once_, after maybe 3 seconds.
+
+
+```javascript
+const names = {
+    util: 'epdoc-util',
+    timeutil: 'epdoc-timeutil',
+    hassio: 'epdoc-node-red-hassio',
+    hautil: 'epdoc-node-red-hautil'
+};
+const lib = {};
+const fail = [];
+Object.keys(names).forEach(key => {
+    const name = names[key];
+    lib[key] = global.get(name);
+    if (!lib[key]) {
+        fail.push(name);
+    }
+});
+if (fail.length && flow.get('load_error') !== true) {
+    flow.set('load_error', true);
+    node.warn(`Error loading modules ${fail.join(', ')}`);
+    lib.fail = true;
+}
+lib.haFactory = lib.hautil.newHAFactory(global);
+lib.fanControlFactory = lib.hassio.newFanControlFactory(global);
+
+global.set('epdoc', lib);
+return msg;
+```
+
+And finally, to use the modules in [Function
+Nodes](https://nodered.org/docs/user-guide/writing-functions), it's simply a
+matter of accessing the global context to get the module. In this example, the
+Function Node has two outputs, with the 2nd output wired to a [Call Service
 node](https://zachowj.github.io/node-red-contrib-home-assistant-websocket/node/call-service.html).
 
 
 ```javascript
-const u = global.get("epdoc-node-red-hautil");
-const payload = u.newLightService('master_bedroom').on().payload();
+const lib = global.get("epdoc");
+const payload = lib.hautil.newLightService('master_bedroom').on().payload();
 node.send([null,{payload:payload}]);
 node.send([msg,null]);
 node.done();
 ```
+Or
+```javascript
+const lib = global.get("epdoc");
+const ha = lib.haFactory.newHA();
+node.warn( `Living room light is ${ha.entity('light.living_room').value()}` );
+```
 
-Unfortunately there is no code completion in Node-RED's Function Node editor.
+Unfortunately there is no code completion for these imported modules from within
+Node-RED's Function Node editor.
 
-You can find a more exhaustive discussion of various ways to use your own
+You can find a more exhaustive and OUTDATED discussion of various ways to use your own
 libraries in Node-RED [here](./NODE-RED.md).
 
 ## Service Class

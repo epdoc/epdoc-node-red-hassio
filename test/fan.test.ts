@@ -1,7 +1,15 @@
-import { HA, NodeRedOptsMock } from 'epdoc-node-red-hautil';
-import { setFan } from '../src';
+import {
+  HA,
+  HAFactory,
+  NodeRedContextApi,
+  NodeRedEnvMock,
+  NodeRedFlowMock,
+  NodeRedGlobalMock,
+  NodeRedNodeMock
+} from 'epdoc-node-red-hautil';
+import { FanRunParams, NodeRedFlowFactory } from '../src';
 
-function fnSend(mock: NodeRedOptsMock, payload: any) {
+function fnSend(mock: NodeRedGlobalMock, payload: any) {
   if (payload.target && payload.target.entity_id) {
     if (payload.service === 'turn_on') {
       mock.setState(payload.target.entity_id, 'on');
@@ -12,9 +20,17 @@ function fnSend(mock: NodeRedOptsMock, payload: any) {
 }
 
 describe('setFan', () => {
+  const gMock = new NodeRedGlobalMock();
+  const oMock: NodeRedContextApi = {
+    env: new NodeRedEnvMock(),
+    flow: new NodeRedFlowMock(),
+    node: new NodeRedNodeMock()
+  };
+  const factory = new NodeRedFlowFactory(gMock);
+  const haFactory = new HAFactory(gMock);
+
   describe('lightning on', () => {
-    const mock: NodeRedOptsMock = new NodeRedOptsMock();
-    mock.setStates({
+    gMock.setStates({
       'input_boolean.lightning': {
         state: 'on'
       },
@@ -25,10 +41,11 @@ describe('setFan', () => {
         state: 'on'
       }
     });
-    mock.opts.node.warn = (msg) => {
+    oMock.node.warn = (msg) => {
       // console.log(msg);
     };
-    let ha = new HA(mock.opts);
+    let ha: HA = haFactory.make();
+    let fanCtrl = factory.makeFanControl(oMock);
 
     it('turn off', (done) => {
       const params = {
@@ -36,15 +53,22 @@ describe('setFan', () => {
         service: 'on',
         shutOffEntityId: 'input_boolean.lightning'
       };
-      setFan(params, (p) => fnSend(mock, p), mock.opts).then((resp) => {
-        expect(mock.getState('fan.away_room')).toEqual('off');
-        done();
-      });
+      fanCtrl.fnSend = (p) => {
+        fnSend(gMock, p);
+      };
+      fanCtrl
+        .fan('away_room')
+        .on()
+        .shutoff('input_boolean.lightning')
+        .run()
+        .then((resp) => {
+          expect(gMock.getState('fan.away_room')).toEqual('off');
+          done();
+        });
     });
   });
   describe('entity data', () => {
-    const mock: NodeRedOptsMock = new NodeRedOptsMock();
-    mock.setStates({
+    gMock.setStates({
       'input_boolean.lightning': {
         state: 'off'
       },
@@ -55,23 +79,27 @@ describe('setFan', () => {
         state: 'on'
       }
     });
-    let ha = new HA(mock.opts);
+    let ha: HA = haFactory.make();
+    let fanCtrl = factory.makeFanControl(oMock);
 
     it('already on', (done) => {
-      const params = {
+      const params: FanRunParams = {
         fan: 'away_room',
         service: 'on',
-        shutOffEntityId: 'input_boolean.lightning'
+        shutOffEntityId: 'input_boolean.lightning',
+        debug: true
       };
-      setFan(params, (p) => fnSend(mock, p), mock.opts).then((resp) => {
-        expect(mock.getState('fan.away_room')).toEqual('on');
+      fanCtrl.fnSend = (p) => {
+        fnSend(gMock, p);
+      };
+      fanCtrl.run(params).then((resp) => {
+        expect(gMock.getState('fan.away_room')).toEqual('on');
         done();
       });
     });
   });
   describe('entity data', () => {
-    const mock: NodeRedOptsMock = new NodeRedOptsMock();
-    mock.setStates({
+    gMock.setStates({
       'input_boolean.lightning': {
         state: 'off'
       },
@@ -82,23 +110,32 @@ describe('setFan', () => {
         state: 'off'
       }
     });
-    let ha = new HA(mock.opts);
+    let ha: HA = haFactory.make();
+    let fanCtrl = factory.makeFanControl(oMock);
+    fanCtrl.fnSend = (p) => {
+      fnSend(gMock, p);
+    };
 
     it('timeout', (done) => {
       const tStart = new Date().getTime();
-      const params = {
+      const params: FanRunParams = {
         fan: 'away_room',
         service: 'on',
         timeout: 200,
         shutOffEntityId: 'input_boolean.lightning'
       };
-      setFan(params, (p) => fnSend(mock, p), mock.opts).then((resp) => {
-        const tDiff = new Date().getTime() - tStart;
-        expect(mock.getState('fan.away_room')).toEqual('off');
-        expect(tDiff).toBeGreaterThan(params.timeout - 1);
-        expect(tDiff).toBeLessThan(params.timeout + 10);
-        done();
-      });
+      fanCtrl
+        .options(params)
+        .run()
+        .then((resp) => {
+          const tDiff = new Date().getTime() - tStart;
+          expect(gMock.getState('fan.away_room')).toEqual('off');
+          // @ts-ignore
+          expect(tDiff).toBeGreaterThan(params.timeout - 1);
+          // @ts-ignore
+          expect(tDiff).toBeLessThan(params.timeout + 10);
+          done();
+        });
     });
   });
 });

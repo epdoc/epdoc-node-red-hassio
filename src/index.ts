@@ -1,4 +1,5 @@
-export * from './fan';
+export * from './fan-control';
+export * from './factory';
 export * from './history-filter';
 export * from './index';
 export * from './location-history';

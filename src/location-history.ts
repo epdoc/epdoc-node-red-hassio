@@ -1,4 +1,4 @@
-import { ContextKey, ContextStorageType, FunctionNodeBase, NodeRedOpts } from 'epdoc-node-red-hautil';
+import { ContextKey, FunctionNodeBase, NodeRedContextApi, NodeRedGlobalApi } from 'epdoc-node-red-hautil';
 import { EpochMilliseconds } from 'epdoc-timeutil';
 import { Dict, isArray } from 'epdoc-util';
 import { HistoryFilter } from './history-filter';
@@ -10,46 +10,44 @@ export type LocationHistoryItem = {
   location: HistoryLocation;
   time: EpochMilliseconds;
 };
+export type StorageContext = 'global' | 'flow';
+export type StorageContextType = 'memory' | 'file';
 export type LocationHistoryOpts = {
-  context: 'global' | 'flow';
-  type?: ContextStorageType;
+  context: StorageContext;
+  type?: StorageContextType;
 };
 export type HistoryDict = Record<Person, any>;
-
-export function newLocationHistory(lopts: LocationHistoryOpts, opts: NodeRedOpts) {
-  return new LocationHistory(lopts, opts);
-}
 
 export class LocationHistory extends FunctionNodeBase {
   private GATE_HISTORY = 'gate_history';
   public history: HistoryDict = {};
   private dirty = false;
-  private _storage: Dict = {};
-  private _storageType: ContextStorageType = 'memory';
+  private context: StorageContext = 'flow';
+  private type: StorageContextType = 'memory';
 
-  constructor(lopts: LocationHistoryOpts, opts: NodeRedOpts) {
-    super(opts);
-    if (lopts) {
-      if (lopts.context) {
-        this._storage = opts[lopts.context];
-      }
-      if (lopts.type) {
-        this._storageType = lopts.type;
-      }
+  constructor(global: NodeRedGlobalApi, contextApi: NodeRedContextApi, opts?: LocationHistoryOpts) {
+    super(global, contextApi);
+    if (opts && opts.context) {
+      this.context = opts.context;
+    }
+    if (opts && opts.type) {
+      this.type = opts.type;
     }
     this.read();
   }
 
   private getStorage(key: ContextKey): any {
-    if (this._storage) {
-      return this._storage.get(key, this._storageType);
-    }
+    return this[this.context].get(key, this.type);
+    // if (this._storage) {
+    //   return this._storage.get(key, this._storageType);
+    // }
   }
 
   private setStorage(key: ContextKey, data: any): any {
-    if (this._storage) {
-      return this._storage.set(key, data, this._storageType);
-    }
+    return this[this.context].set(key, data, this.type);
+    // if (this._storage) {
+    //   return this._storage.set(key, data, this._storageType);
+    // }
   }
 
   read(): this {

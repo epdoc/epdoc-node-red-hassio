@@ -7,7 +7,8 @@
     "outDir": "./dist",
     "noEmit": false,
     "esModuleInterop": true,
-    "strict": true
+    "strict": true,
+    "strictPropertyInitialization": false
   },
   "y_compilerOptions": {
     "lib": ["ESNext"],
