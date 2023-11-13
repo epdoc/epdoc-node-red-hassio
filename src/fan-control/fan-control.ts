@@ -17,7 +17,16 @@ import {
   newSwitchService
 } from 'epdoc-node-red-hautil';
 import { Milliseconds } from 'epdoc-timeutil';
-import { delayPromise, isFunction, isInteger, isNonEmptyArray, isNonEmptyString, isNumber, isString } from 'epdoc-util';
+import {
+  delayPromise,
+  isDict,
+  isFunction,
+  isInteger,
+  isNonEmptyArray,
+  isNonEmptyString,
+  isNumber,
+  isString
+} from 'epdoc-util';
 
 const REG = {
   onoff: new RegExp(/^(on|off)$/, 'i'),
@@ -37,6 +46,9 @@ export type FanRunParams = {
   debug?: boolean;
   fnSend?: PayloadSendFunction;
 };
+export function isFanRunParams(val: any): val is FanRunParams {
+  return isDict(val) && isNonEmptyString(val.fan);
+}
 type FanControlLogFunctions = {
   debug: NodeRedLogFunction;
   error: NodeRedLogFunction;

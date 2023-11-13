@@ -1,7 +1,9 @@
 # epdoc-node-red-hautil
 
-General purpose utilities for use with [Node-RED](https://nodered.org/) and
-[Home Assistant](https://www.home-assistant.io/).
+General purpose utilities for use in [Function
+Nodes](https://nodered.org/docs/user-guide/writing-functions) with
+[Node-RED](https://nodered.org/) and [Home
+Assistant](https://www.home-assistant.io/).
 
  * `Service` wrapper, to generate payloads for use with the Call Service node.
  * `HA` wrapper, to retrieve state from home assistant
@@ -31,11 +33,12 @@ bun run build
 ## Installation and Use
 
 Perhaps the most predictable way to install this package with Home Assistant is
-to add this dependency to the Node-RED `package.json` file and restart Node-RED.
-Node-RED is restarted from _Settings > Add-ons > Node-Red_. The restart should
-cause the module to be installed and available. For module updates you can edit
-the version number in `package.json`, delete the corresponding folder under
-`node_modules`, then restart Node-RED.
+to manually add this dependency to the Node-RED `package.json` file and restart
+Node-RED. Node-RED is restarted from _Settings > Add-ons > Node-Red_. The
+restart should cause the module to be installed and available. For module
+updates you can edit the version number in `package.json`, delete the
+corresponding folder under `node_modules`, then restart Node-RED. The Node-RED
+add-on will install the missing packages as part of it's startup procedure.
 
 ```json
     "dependencies": {
@@ -52,7 +55,6 @@ to specify the module in each `Function Node` where it is used.  Here are the
 required changes to `/config/Node-RED/settings.json` for this to work:
 
 ```js
-// Don't set module.exports yet
 let settings = {
 
   ...
@@ -72,10 +74,12 @@ let settings = {
 module.exports = settings;
 ```
 
-A convenient way of making these modules available in Function Nodes is to
-initialize them in a launch-time script. Here is an example of such a script.
-Paste this code into a Function Node and use an inject node to execute the
-function. The inject node should be set to _inject once_, after maybe 3 seconds.
+A convenient way of making these modules available in [Function
+Nodes](https://nodered.org/docs/user-guide/writing-functions) is to initialize
+them in a launch-time script. Here is an example of such a script. Paste this
+code into a new Function Node and use an [Inject
+Node](https://nodered.org/docs/user-guide/nodes#inject) to execute the function.
+The inject node should be set to _inject once_, after maybe 3 seconds.
 
 
 ```javascript
@@ -100,15 +104,31 @@ if (fail.length && flow.get('load_error') !== true) {
     lib.fail = true;
 }
 lib.haFactory = lib.hautil.newHAFactory(global);
-lib.fanControlFactory = lib.hassio.newFanControlFactory(global);
+lib.utilFactory = lib.hassio.NodeRedFlowFactory(global);
 
 global.set('epdoc', lib);
 return msg;
 ```
 
-And finally, to use the modules in [Function
-Nodes](https://nodered.org/docs/user-guide/writing-functions), it's simply a
-matter of accessing the global context to get the module. In this example, the
+This can be shortened using this supplied module loading function.
+
+```typescript
+const modules = {
+    util: 'epdoc-util',
+    timeutil: 'epdoc-timeutil',
+    hassio: 'epdoc-node-red-hassio',
+    hautil: 'epdoc-node-red-hautil'
+};
+const lib = global.get('epdoc-node-red-hautil').loadModules(global,modules);
+lib.utilFactory = lib.hassio.newNodeRedFlowFactory(global);
+if( lib.load_errors.length ) {
+    node.warn(`Error loading modules ${lib.load_errors.join(', ')}`);
+}
+global.set('epdoc',lib);
+```
+
+And finally, to use the modules in Function Nodes, it's simply a matter of
+accessing the global context to get the module. In this first example, the
 Function Node has two outputs, with the 2nd output wired to a [Call Service
 node](https://zachowj.github.io/node-red-contrib-home-assistant-websocket/node/call-service.html).
 
@@ -120,11 +140,16 @@ node.send([null,{payload:payload}]);
 node.send([msg,null]);
 node.done();
 ```
+Also
+```javascript
+const lib = global.get("epdoc");
+const ha = lib.haFactory.make();
+node.warn( `Living room light is ${ha.entity('light.living_room').value()}` );
+```
 Or
 ```javascript
 const lib = global.get("epdoc");
-const ha = lib.haFactory.newHA();
-node.warn( `Living room light is ${ha.entity('light.living_room').value()}` );
+const fanControl = lib.utilFactory.makeFanControl({env:env,flow:flow,node:node});
 ```
 
 Unfortunately there is no code completion for these imported modules from within

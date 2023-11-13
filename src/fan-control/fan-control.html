@@ -1,0 +1,48 @@
+<script type="text/javascript">
+  RED.nodes.registerType('fan-control',{
+      category: 'function',
+      color: '#a6bbcf',
+      defaults: {
+        fan: {value:""},
+        service: {value:"off"},
+        speed: {value:2,validate:RED.validators.regex(/^[0-6]$/)},
+        timeout: {value:0,validate:RED.validators.number()},
+        debug: {value:false},
+      },
+      inputs: 1,
+      outputs: 1,
+      icon: "file.svg",
+      label: function() {
+          return this.name||"fan-control";
+      }
+  });
+</script>
+
+<script type="text/html" data-template-name="fan-control">
+  <div class="form-row">
+    <label for="node-input-fan"><i class="fa fa-tag"></i> Fan</label>
+    <input type="text" id="node-input-fan" placeholder="master_bedroom">
+</div>
+<div class="form-row">
+  <label for="node-input-service-on"><i class="fa fa-tag"></i> Turn fan on</label>
+  <input type="radio" id="node-input-service-on" value="on">
+  <label for="node-input-service-off"><i class="fa fa-tag"></i> Turn fan off</label>
+  <input type="radio" id="node-input-service-off" value="off">
+</div>
+<div class="form-row">
+  <label for="node-input-speed"><i class="fa fa-tag"></i> Speed (1-6)</label>
+  <input type="number" id="node-input-speed" placeholder="">
+</div>
+<div class="form-row">
+  <label for="node-input-timeout"><i class="fa fa-tag"></i> Turn off after (ms)</label>
+  <input type="number" id="node-input-timeout" placeholder="10000">
+</div>
+<div class="form-row">
+  <label for="node-input-debug"><i class="fa fa-tag"></i> Enable debug</label>
+  <input type="checkbox" id="node-input-debug">
+</div>
+</script>
+
+<script type="text/html" data-help-name="fan-control">
+  <p>A node to control a fan that has a separate smart switch and speed control</p>
+</script>

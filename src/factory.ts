@@ -6,9 +6,13 @@ import {
   NodeRedNodeApi,
   isNodeRedContextApi
 } from 'epdoc-node-red-hautil';
-import { FanControl } from './fan-control';
-import { LocationHistory, LocationHistoryOpts } from './location-history';
-import { PingContext, PingFlowInputPayload } from './ping-context';
+import { FanControl } from './fan-control/fan-control';
+import { LocationHistory, LocationHistoryOpts } from './location-history/location-history';
+import { PingContext, PingFlowInputPayload } from './ping-test/ping-context';
+
+export function newNodeRedFlowFactory(global: NodeRedGlobalApi): NodeRedFlowFactory {
+  return new NodeRedFlowFactory(global);
+}
 
 export class NodeRedFlowFactory {
   protected _global: NodeRedGlobalApi;
