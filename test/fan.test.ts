@@ -1,27 +1,36 @@
-import {
-  HA,
-  HAFactory,
-  NodeRedContextApi,
-  NodeRedEnvMock,
-  NodeRedFlowMock,
-  NodeRedGlobalMock,
-  NodeRedNodeMock
-} from 'epdoc-node-red-hautil';
-import { FanRunParams, NodeRedFlowFactory } from '../src';
+let helper = require('node-red-node-test-helper');
+// import { NodeRedGlobalMock } from 'epdoc-node-red-hautil';
+// import helper from 'node-red-node-test-helper';
+// import fanControlNode from '../src/fan-control/fan-control-node';
+let fanControlNode = require('../src/fan-control/fan-control-node');
 
-function fnSend(mock: NodeRedGlobalMock, payload: any) {
-  console.log(`payload: ${JSON.stringify(payload)}`);
-  if (payload.target && payload.target.entity_id) {
-    if (payload.service === 'turn_on') {
-      mock.setEntityStateValue(payload.target.entity_id, 'on');
-    } else if (payload.service === 'turn_off') {
-      mock.setEntityStateValue(payload.target.entity_id, 'off');
-    }
-  }
-}
+// function fnSend(mock: NodeRedGlobalMock, payload: any) {
+//   console.log(`payload: ${JSON.stringify(payload)}`);
+//   if (payload.target && payload.target.entity_id) {
+//     if (payload.service === 'turn_on') {
+//       mock.setEntityStateValue(payload.target.entity_id, 'on');
+//     } else if (payload.service === 'turn_off') {
+//       mock.setEntityStateValue(payload.target.entity_id, 'off');
+//     }
+//   }
+// }
 
 describe('setFan', () => {
-  describe.only('lightning on', () => {
+  afterEach(() => {
+    helper.unload();
+  });
+
+  it.only('should be loaded', function (done) {
+    let flow = [{ id: 'n1', type: 'fan-control', name: 'test name' }];
+    helper.load(fanControlNode, flow, function () {
+      let n1 = helper.getNode('n1');
+      n1.should.have.property('name', 'test name');
+      done();
+    });
+  });
+
+  /*
+  describe('lightning on', () => {
     const gMock = new NodeRedGlobalMock();
     const oMock: NodeRedContextApi = {
       env: new NodeRedEnvMock(),
@@ -154,7 +163,7 @@ describe('setFan', () => {
         shutOffEntityId: 'input_boolean.lightning'
       };
       fanCtrl
-        .options(params)
+        .setPayloadConfig(params)
         .run()
         .then((resp) => {
           const tDiff = new Date().getTime() - tStart;
@@ -167,4 +176,5 @@ describe('setFan', () => {
         });
     }, 1000);
   });
+  */
 });

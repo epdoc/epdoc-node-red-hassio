@@ -3,10 +3,8 @@ import {
   NodeRedEnvApi,
   NodeRedFlowApi,
   NodeRedGlobalApi,
-  NodeRedNodeApi,
-  isNodeRedContextApi
+  NodeRedNodeApi
 } from 'epdoc-node-red-hautil';
-import { FanControl } from './fan-control/fan-control';
 import { LocationHistory, LocationHistoryOpts } from './location-history/location-history';
 import { PingContext, PingFlowInputPayload } from './ping-test/ping-context';
 
@@ -19,13 +17,6 @@ export class NodeRedFlowFactory {
 
   constructor(global: NodeRedGlobalApi) {
     this._global = global;
-  }
-
-  makeFanControl(contextApi: NodeRedContextApi): FanControl {
-    if (!isNodeRedContextApi(contextApi)) {
-      throw new Error('FanControlFlowFactory not propertly configured');
-    }
-    return new FanControl(this._global, contextApi);
   }
 
   makieLocationHistory(contextApi: NodeRedContextApi, opts?: LocationHistoryOpts) {
@@ -46,15 +37,6 @@ export class NodeRedNodeFactory {
     this._global = global;
     this._flow = flow;
     this._env = env;
-  }
-
-  makeFanControl(node: NodeRedNodeApi): FanControl {
-    const contextApi: NodeRedContextApi = {
-      flow: this._flow,
-      env: this._env,
-      node: node
-    };
-    return new FanControl(this._global, contextApi);
   }
 
   makePingContext(node: NodeRedNodeApi, payload?: PingFlowInputPayload): PingContext {

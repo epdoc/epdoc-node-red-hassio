@@ -4,29 +4,20 @@ import {
   EntityService,
   EntityShortId,
   EntityShortService,
-  FanSpeed6Service,
   FanSpeed6Speed,
-  FunctionNodeBase,
   HA,
-  NodeRedContextApi,
-  NodeRedGlobalApi,
+  NodeRedDoneFunction,
   NodeRedLogFunction,
+  NodeRedNodeApi,
+  NodeRedSendFunction,
   ServicePayload,
-  isFanSpeed6Speed,
   newFanSpeed6Service,
   newSwitchService
 } from 'epdoc-node-red-hautil';
 import { Milliseconds } from 'epdoc-timeutil';
-import {
-  delayPromise,
-  isDict,
-  isFunction,
-  isInteger,
-  isNonEmptyArray,
-  isNonEmptyString,
-  isNumber,
-  isString
-} from 'epdoc-util';
+import { Integer, delayPromise, isDict, isNonEmptyString } from 'epdoc-util';
+import { Node, NodeContext, NodeContextData, NodeDef, NodeMessage } from 'node-red';
+import { FanControlParams } from './fan-control-params';
 
 const REG = {
   onoff: new RegExp(/^(on|off)$/, 'i'),
@@ -44,148 +35,83 @@ export type FanRunParams = {
   shutOffEntityId?: EntityId;
   delay?: Milliseconds[];
   debug?: boolean;
-  fnSend?: PayloadSendFunction;
 };
 export function isFanRunParams(val: any): val is FanRunParams {
   return isDict(val) && isNonEmptyString(val.fan);
 }
 type FanControlLogFunctions = {
   debug: NodeRedLogFunction;
-  error: NodeRedLogFunction;
 };
+export type FanControlUiConfig = {
+  fan: EntityShortId;
+  service: 'on' | 'off';
+  speed: Integer;
+  timeout: Milliseconds;
+  debug: boolean;
+};
+export function isFanControlUiConfig(val: any): val is FanControlUiConfig {
+  return val && REG.onoff.test(val.service);
+}
 
-export class FanControl extends FunctionNodeBase {
-  // private fanId: EntityId = '';
-  // private switch: EntityId = '';
-  private _retryDelay: Milliseconds[] = [1000, 3000];
-  private log: FanControlLogFunctions = {
-    debug: (...args) => {},
-    error: this.node.error
+export class FanControl {
+  protected _node: Node;
+  protected _context: NodeContext;
+  protected node: NodeRedNodeApi;
+  protected log: FanControlLogFunctions = {
+    debug: (...args) => {}
   };
-  private _fnSend: PayloadSendFunction;
-  private _ha: HA;
+  protected opts: FanControlParams = new FanControlParams();
+  private _msg: NodeMessage;
+  private _nodeSend: NodeRedSendFunction;
+  private _nodeDone: NodeRedDoneFunction;
+  protected _ha: HA;
   private _shutoff: boolean = false;
-  private _shortId: EntityShortId;
-  private _fan: Entity;
-  private _switch: Entity;
-  private _speed: FanSpeed6Speed = 0;
-  private _service: 'on' | 'off' = 'off';
-  private _bOn: boolean = false;
-  private _timeout: Milliseconds = 0;
+  protected _fan: Entity;
+  protected _switch: Entity;
 
-  constructor(global: NodeRedGlobalApi, opts: NodeRedContextApi) {
-    super(global, opts);
+  constructor(node: Node, msg: NodeMessage, send: NodeRedSendFunction, done: NodeRedDoneFunction) {
+    this._node = node;
     this._ha = new HA(this.global);
+    this._msg = msg;
+    this._nodeSend = send;
+    this._nodeDone = done;
   }
 
-  fan(shortId: EntityShortId): this {
-    if (isNonEmptyString(shortId)) {
-      this._shortId = shortId;
-      const fanId: EntityId = 'fan.' + shortId;
-      const switchId: EntityId = fanId;
-      this._fan = this._ha.entity(fanId);
-      this._switch = this._ha.entity(switchId);
+  get global(): NodeContextData {
+    return this._node.context().global;
+  }
+  get flow(): NodeContextData {
+    return this._node.context().flow;
+  }
+
+  setUiConfig(config?: NodeDef): this {
+    if (isFanControlUiConfig(config)) {
+      this.opts
+        .setDebug(config.debug)
+        .setFan(config.fan)
+        .setSpeed(config.speed)
+        .setService(config.service)
+        .setTimeout(config.timeout);
+      this.initAfter();
     }
     return this;
   }
 
-  get fanId(): EntityId {
-    return this._fan.entityId || 'undefined';
-  }
-
-  get switchId(): EntityId {
-    return this._switch.entityId || 'undefined';
-  }
-
-  shutoff(entityId: EntityId | undefined): this {
-    if (isNonEmptyString(entityId)) {
-      let entity: Entity = this._ha.entity(entityId);
-      if (entity.isValid() && entity.isOn()) {
-        this._shutoff = true;
-      } else {
-        this.log.error(`Entity ${entityId} not found`);
-      }
-    }
-    return this;
-  }
-
-  speed(speed: FanSpeed6Speed | undefined): this {
-    if (isFanSpeed6Speed(speed)) {
-      this._speed = speed;
-      if (this._speed === 0) {
-        return this.off();
-      }
-    }
-    return this;
-  }
-
-  percentage(pct: number | undefined): this {
-    if (isNumber(pct)) {
-      this._speed = FanSpeed6Service.percentageToSpeed(pct);
-    }
-    return this;
-  }
-
-  on(val: boolean = true): this {
-    this._service = val ? 'on' : 'off';
-    this._bOn = val;
-    return this;
-  }
-
-  off(val: boolean = true): this {
-    this._service = val ? 'off' : 'on';
-    this._bOn = val ? false : true;
-    return this;
-  }
-
-  service(val: 'on' | 'off' | string | undefined): this {
-    if (isString(val)) {
-      if (REG.on.test(val)) {
-        return this.on();
-      } else if (REG.off.test(val)) {
-        return this.off();
-      }
-    }
-    return this;
-  }
-
-  timeout(val: Milliseconds | undefined): this {
-    if (isInteger(val)) {
-      this._timeout = val;
-    }
-    return this;
-  }
-
-  set fnSend(val: PayloadSendFunction) {
-    this._fnSend = val;
-  }
-
-  setFnSend(cb?: PayloadSendFunction): this {
-    if (isFunction(cb)) {
-      this._fnSend = cb;
-    }
-    return this;
-  }
-
-  options(params?: FanRunParams): this {
-    if (params) {
-      if (params.debug) {
-        this.log.debug = this.node.warn;
-      }
+  setPayloadConfig(params?: any): this {
+    if (isFanRunParams(params)) {
+      this.opts
+        .setDebug(params.debug)
+        .setFan(params.fan)
+        .setShutoff(params.shutOffEntityId)
+        .setSpeed(params.speed)
+        .setPercentage(params.percentage)
+        .setService(params.service)
+        .setTimeout(params.timeout)
+        .setDelay(params.delay);
+      this.initAfter();
       this.log.debug(`setFan input params: ${JSON.stringify(params)}`);
-      this.fan(params.fan)
-        .shutoff(params.shutOffEntityId)
-        .speed(params.speed)
-        .percentage(params.percentage)
-        .service(params.service)
-        .timeout(params.timeout)
-        .setFnSend(params.fnSend);
 
-      if (isNonEmptyArray(params.delay)) {
-        this._retryDelay = params.delay;
-      }
-
-      this.log.debug(`setFan ${this._service.toUpperCase()} speed=${this._speed} timeout=${this._timeout}`);
+      this.log.debug(`setFan ${this.opts.service.toUpperCase()} speed=${this.opts.speed} timeout=${this.opts.timeout}`);
 
       // const currentPct = ha.getEntitySpeed(fan_id);
 
@@ -194,11 +120,48 @@ export class FanControl extends FunctionNodeBase {
     return this;
   }
 
-  isValid(): boolean {
-    if (Entity.isEntity(this._fan) && Entity.isEntity(this._switch) && isFunction(this._fnSend)) {
-      return true;
+  initAfter(): this {
+    if (this.opts.debug === true) {
+      this.log.debug = this.node.warn;
     }
-    return false;
+    if (isNonEmptyString(this.opts.shortId)) {
+      const fanId: EntityId = 'fan.' + this.opts.shortId;
+      const switchId: EntityId = fanId;
+      this._fan = this._ha.entity(fanId);
+      this._switch = this._ha.entity(switchId);
+    }
+    if (isNonEmptyString(this.opts.shutoffEntityId)) {
+      let entity: Entity = this._ha.entity(this.opts.shutoffEntityId);
+      if (entity.isValid() && entity.isOn()) {
+        this._shutoff = true;
+      } else {
+        this.node.error(`Entity ${this.opts.shutoffEntityId} not found`);
+      }
+    }
+    return this;
+  }
+
+  serviceSend(payload: any) {
+    // @ts-ignore
+    this._nodeSend([null, { payload: payload }]);
+  }
+
+  done() {
+    // @ts-ignore
+    this._nodeSend([this._msg, null]);
+    this._nodeDone();
+  }
+
+  isValid(): boolean {
+    return Entity.isEntity(this._fan) && Entity.isEntity(this._switch);
+  }
+
+  get fanId(): EntityId {
+    return this._fan.entityId || 'undefined';
+  }
+
+  get switchId(): EntityId {
+    return this._switch.entityId || 'undefined';
   }
 
   /**
@@ -210,7 +173,7 @@ export class FanControl extends FunctionNodeBase {
    * switch.
    */
   run(params?: FanRunParams): Promise<void> {
-    this.options(params);
+    this.setPayloadConfig(params);
     if (this.isValid()) {
       let bTurnedOn = false;
 
@@ -218,61 +181,67 @@ export class FanControl extends FunctionNodeBase {
         .then((resp) => {
           this.log.debug(`${this.switchId} is ${this._switch.state()}`);
           this.log.debug(`Shutoff (lightning) is ${this._shutoff}`);
-          if (this._switch.isOn() && (this._shutoff || !this._bOn || (!this._bOn && this._speed === 0))) {
+          if (this._switch.isOn() && (this._shutoff || this.opts.shouldTurnOff())) {
             this.log.debug(`Turn off ${this.fanId}`);
-            let payload: ServicePayload = newFanSpeed6Service(this._shortId).off().payload();
-            this._fnSend(payload);
+            let payload: ServicePayload = newFanSpeed6Service(this.opts.shortId).off().payload();
+            this.serviceSend(payload);
+            this._node.status({ fill: 'green', shape: 'ring', text: `Turn off ${this.fanId}` });
           } else {
             this.log.debug(`Fan ${this.fanId} is ${this._switch.state()}, no need to turn off`);
           }
-          if (!this._switch.isOn() && !this._shutoff && (this._bOn || this._speed > 0)) {
+          if (!this._switch.isOn() && !this._shutoff && this.opts.shouldTurnOn()) {
             this.log.debug(`Turn on ${this.switchId} because fan was off`);
             let payload = newSwitchService(this.switchId).on().payload();
-            this._fnSend(payload);
+            this.serviceSend(payload);
             bTurnedOn = true;
+            this._node.status({ fill: 'green', shape: 'dot', text: `Turned on ${this.fanId}` });
           } else {
             this.log.debug(`Fan ${this.fanId} is already on`);
           }
-          if (!this._shutoff && this._speed > 0 && bTurnedOn) {
-            this.log.debug(`1st delay of ${this._retryDelay[0]} for ${this.switchId}`);
-            return delayPromise(this._retryDelay[0]);
+          if (!this._shutoff && this.opts.speed > 0 && bTurnedOn) {
+            this.log.debug(`1st delay of ${this.opts.retryDelay[0]} for ${this.switchId}`);
+            return delayPromise(this.opts.retryDelay[0]);
           } else {
             return Promise.resolve();
           }
         })
         .then(() => {
-          if (!this._shutoff && this._speed > 0) {
-            this.log.debug(`1st set fan speed to ${this._speed} for ${this.fanId}`);
-            let payload = newFanSpeed6Service(this._shortId).speed(this._speed).payload();
-            this._fnSend(payload);
-            this.log.debug(`2nd delay of ${this._retryDelay[1]} for ${this.switchId}`);
-            return delayPromise(this._retryDelay[1]);
+          if (!this._shutoff && this.opts.speed > 0) {
+            this.log.debug(`1st set fan speed to ${this.opts.speed} for ${this.fanId}`);
+            let payload = newFanSpeed6Service(this.opts.shortId).speed(this.opts.speed).payload();
+            this.serviceSend(payload);
+            this.log.debug(`2nd delay of ${this.opts.retryDelay[1]} for ${this.switchId}`);
+            this._node.status({ fill: 'blue', shape: 'dot', text: `Set ${this.fanId} to ${this.opts.speed}` });
+            return delayPromise(this.opts.retryDelay[1]);
           } else {
             this.log.debug(`Skipping set speed step and first delay for ${this.fanId}`);
             return Promise.resolve();
           }
         })
         .then(() => {
-          if (!this._shutoff && this._speed > 0) {
-            this.log.debug(`2nd set fan speed to ${this._speed} for ${this.fanId}`);
-            let payload = newFanSpeed6Service(this._shortId).speed(this._speed).payload();
-            this._fnSend(payload);
+          if (!this._shutoff && this.opts.speed > 0) {
+            this.log.debug(`2nd set fan speed to ${this.opts.speed} for ${this.fanId}`);
+            let payload = newFanSpeed6Service(this.opts.shortId).speed(this.opts.speed).payload();
+            this.serviceSend(payload);
+            this._node.status({ fill: 'blue', shape: 'ring', text: `Set ${this.fanId} to ${this.opts.speed}` });
           }
           return Promise.resolve();
         })
         .then(() => {
-          if ((this._bOn || this._speed > 0) && this._timeout && !this._shutoff) {
-            this.log.debug(`timeout ${this._timeout} for ${this.switchId}`);
-            return delayPromise(this._timeout);
+          if (this.opts.shouldTimeout() && !this._shutoff) {
+            this.log.debug(`timeout ${this.opts.timeout} for ${this.switchId}`);
+            this._node.status({ fill: 'yellow', shape: 'ring', text: `${this.fanId} waiting ${this.opts.timeout} ms` });
+            return delayPromise(this.opts.timeout);
           } else {
             return Promise.resolve();
           }
         })
         .then(() => {
-          if ((this._bOn || this._speed > 0) && this._timeout && !this._shutoff) {
+          if (this.opts.shouldTimeout() && !this._shutoff) {
             this.log.debug(`timeout turn off for ${this.switchId}`);
             let payload = newSwitchService(this.switchId).off().payload();
-            this._fnSend(payload);
+            this.serviceSend(payload);
+            this._node.status({ fill: 'green', shape: 'ring', text: `Turn off ${this.fanId}` });
           }
           return Promise.resolve();
         })
@@ -281,8 +250,9 @@ export class FanControl extends FunctionNodeBase {
         });
     } else {
       const err: Error = new Error('FanControl invalid input parameters');
+      this._node.error(err.message);
+      this._node.status({ fill: 'red', shape: 'dot', text: 'Invalid parameters' });
       return Promise.reject(err);
-      this.log.error(err.message);
     }
     return Promise.resolve();
   }

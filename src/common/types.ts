@@ -1,5 +1,7 @@
 import { Dict } from 'epdoc-util';
-
-export type NodeRedMessage = Dict & {
-  payload: any;
+import { Node } from 'node-red';
+export type NodeRed = {
+  nodes: {
+    createNode: (ctx: Node, config: Dict) => {};
+  };
 };

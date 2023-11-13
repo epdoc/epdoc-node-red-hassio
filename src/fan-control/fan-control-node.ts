@@ -1,31 +1,24 @@
-import { EntityShortId } from 'epdoc-node-red-hautil';
-import { Milliseconds } from 'epdoc-timeutil';
-import { Integer } from 'epdoc-util';
-import { NodeRedMessage } from '../common/types';
+import { NodeRedDoneFunction, NodeRedSendFunction } from 'epdoc-node-red-hautil';
+import { Node, NodeAPI, NodeDef, NodeMessage } from 'node-red';
 import { FanControl } from './fan-control';
 
-type FanControlUiConfig = {
-  fan: EntityShortId;
-  service: 'on' | 'off';
-  speed: Integer;
-  timeout: Milliseconds;
-  debug: boolean;
-};
+module.exports = function (RED: NodeAPI) {
+  function FanControlNode(this: any, config: NodeDef) {
+    RED.nodes.createNode(this as Node, config);
+    let node: Node = this as Node;
 
-module.exports = function (RED: any) {
-  function fanControlNode(config: FanControlUiConfig) {
-    RED.nodes.createNode(this, config);
-    let node: any = this;
+    // this.server = RED.nodes.getNode(config.server);
+    // if (this.server) {
+    // }
 
-    node.on('input', async (msg: NodeRedMessage, send: Function, done: Function) => {
-      const fanCtrl = new FanControl();
-      fanCtrl.setContext(global, node, flow);
+    node.on('input', async (msg: NodeMessage, send: NodeRedSendFunction, done: NodeRedDoneFunction) => {
+      const fanCtrl = new FanControl(node, msg, send, done);
       fanCtrl.setUiConfig(config);
       fanCtrl.setPayloadConfig(msg.payload);
       fanCtrl.run().then((resp) => {
-        send(resp);
-        done();
+        fanCtrl.done();
       });
     });
   }
+  RED.nodes.registerType('functionNode', FanControlNode);
 };

@@ -7,7 +7,7 @@ import {
 } from 'epdoc-node-red-hautil';
 import { isArray, isObject } from 'epdoc-util';
 import { NodeRedFlowFactory, NodeRedNodeFactory } from '../src';
-import { PingContext, PingFlowInputPayload, PingNodeInputItem } from '../src/ping-context';
+import { PingContext, PingFlowInputPayload, PingNodeInputItem } from '../src/ping-test/ping-context';
 
 describe('ping-context', () => {
   describe('data set 1', () => {
