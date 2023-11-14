@@ -35,7 +35,7 @@
     "entryPoints": ["src/index.ts"],
     "out": "docs"
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts","src/**/*.html"],
   "exclude": ["node_modules"],
   "x_compilerOptions": {
     "x_outFile": "./dist/index.ts",

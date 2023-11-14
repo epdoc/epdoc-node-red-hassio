@@ -10,7 +10,7 @@
         debug: {value:false},
       },
       inputs: 1,
-      outputs: 1,
+      outputs: 2,
       icon: "file.svg",
       label: function() {
           return this.name||"fan-control";
@@ -44,5 +44,9 @@
 </script>
 
 <script type="text/html" data-help-name="fan-control">
-  <p>A node to control a fan that has a separate smart switch and speed control</p>
+  <p>A node to control a fan that is configured with a separate smart switch and speed control.
+    Because of this, the speed controller may not be able to receive messages unless the fan is on,
+    and so we ensure a fan can receive speed change messages. 
+    Also allows the fan to be turned on for a specified duration.
+  </p>
 </script>

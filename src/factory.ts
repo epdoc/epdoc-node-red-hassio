@@ -5,8 +5,8 @@ import {
   NodeRedGlobalApi,
   NodeRedNodeApi
 } from 'epdoc-node-red-hautil';
-import { LocationHistory, LocationHistoryOpts } from './location-history/location-history';
-import { PingContext, PingFlowInputPayload } from './ping-test/ping-context';
+import { LocationHistory, LocationHistoryOpts } from './nodes/location-history/location-history';
+import { PingContext, PingFlowInputPayload } from './nodes/ping-test/ping-context';
 
 export function newNodeRedFlowFactory(global: NodeRedGlobalApi): NodeRedFlowFactory {
   return new NodeRedFlowFactory(global);

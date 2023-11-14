@@ -1,8 +1,9 @@
+let should = require('should');
 let helper = require('node-red-node-test-helper');
 // import { NodeRedGlobalMock } from 'epdoc-node-red-hautil';
 // import helper from 'node-red-node-test-helper';
 // import fanControlNode from '../src/fan-control/fan-control-node';
-let fanControlNode = require('../src/fan-control/fan-control-node');
+let fanControlNode = require('../dist/nodes/fan-control/fan-control-node');
 
 // function fnSend(mock: NodeRedGlobalMock, payload: any) {
 //   console.log(`payload: ${JSON.stringify(payload)}`);
@@ -14,22 +15,40 @@ let fanControlNode = require('../src/fan-control/fan-control-node');
 //     }
 //   }
 // }
+helper.init(require.resolve('node-red'));
+// console.log(helper.hasOwnProperty('load'));
+// console.log(helper.hasOwnProperty('getNode'));
 
-describe('setFan', () => {
-  afterEach(() => {
+describe('fan-control node', () => {
+  beforeEach(function (done) {
+    helper.startServer(done);
+  });
+
+  afterEach(function (done) {
     helper.unload();
+    helper.stopServer(done);
   });
 
-  it.only('should be loaded', function (done) {
-    let flow = [{ id: 'n1', type: 'fan-control', name: 'test name' }];
-    helper.load(fanControlNode, flow, function () {
+  it('should be loaded', (done) => {
+    let flow = [{ id: 'n1', type: 'fan-control', name: 'fan-control' }];
+    // console.log(`flow ${JSON.stringify(flow)}`);
+    helper.load(fanControlNode, flow, () => {
       let n1 = helper.getNode('n1');
-      n1.should.have.property('name', 'test name');
-      done();
+      try {
+        expect(n1).toBeDefined();
+        console.log(JSON.stringify(n1));
+        n1.should.have.property('name', 'fan-control-node');
+        expect(n1.name).toEqual('fan-control-node');
+        done();
+      } catch (err) {
+        done(err);
+      }
     });
-  });
+  }, 1000);
+});
 
-  /*
+/*
+describe('fan-control Node', () => {
   describe('lightning on', () => {
     const gMock = new NodeRedGlobalMock();
     const oMock: NodeRedContextApi = {
@@ -177,4 +196,3 @@ describe('setFan', () => {
     }, 1000);
   });
   */
-});
