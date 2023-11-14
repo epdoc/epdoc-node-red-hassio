@@ -1,7 +1,7 @@
 <script type="text/javascript">
   RED.nodes.registerType('fan-control',{
       category: 'function',
-      color: '#a6bbcf',
+      color: '#38B5F4',
       defaults: {
         fan: {value:""},
         service: {value:"off"},
@@ -17,6 +17,25 @@
       }
   });
 </script>
+
+<div class="form-row">
+  <label
+      for="node-input-entityId"
+      data-i18n="api-call-service.label.entity"
+  ></label>
+  <select
+      id="node-input-entityId"
+      multiple="multiple"
+      style="width: 70%"
+  ></select>
+</div>
+<div class="form-row">
+  <label
+      for="node-input-service"
+      data-i18n="api-call-service.label.service"
+  ></label>
+  <select id="node-input-service" style="width: 70%"></select>
+</div>
 
 <script type="text/html" data-template-name="fan-control">
   <div class="form-row">

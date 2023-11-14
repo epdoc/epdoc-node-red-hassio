@@ -1,5 +1,25 @@
+/*
+import { Node, NodeAPI, NodeDef, NodeMessage } from 'node-red';
+
+module.exports = function (RED: NodeAPI) {
+  function FanControlNode(config: NodeDef) {
+    // @ts-ignore
+    RED.nodes.createNode(this as Node, config);
+    // @ts-ignore
+    let node: Node = this as Node;
+    // @ts-ignore
+    this.on('input', function (msg: NodeMessage) {
+      // @ts-ignore
+      msg.payload = msg.payload.toLowerCase();
+      node.send(msg);
+    });
+  }
+  RED.nodes.registerType('fan-control', FanControlNode);
+};
+*/
+
 import { NodeRedDoneFunction, NodeRedSendFunction } from 'epdoc-node-red-hautil';
-import { Node, NodeInitializer, NodeMessage } from 'node-red';
+import { NodeInitializer, NodeMessage } from 'node-red';
 import { FanControl } from './fan-control';
 import { FanControlNode, FanNodeDef, isFanControlNodeOpts } from './types';
 
@@ -8,7 +28,7 @@ const nodeInit: NodeInitializer = (RED): void => {
     try {
       console.log('FanControlNode');
       RED.nodes.createNode(this, config);
-      let node: Node = this as Node;
+      let node: FanControlNode = this as FanControlNode;
 
       if (!isFanControlNodeOpts(config)) {
         return;
@@ -17,10 +37,10 @@ const nodeInit: NodeInitializer = (RED): void => {
       // if (this.server) {
       // }
 
+      // const processMsg = async (msg: NodeMessage, send: NodeRedSendFunction, done: NodeRedDoneFunction) => {
+      //   console.log('process message');
+      //};
       const processMsg = async (msg: NodeMessage, send: NodeRedSendFunction, done: NodeRedDoneFunction) => {
-        console.log('process message');
-      };
-      const processMsg2 = async (msg: NodeMessage, send: NodeRedSendFunction, done: NodeRedDoneFunction) => {
         const fanCtrl = new FanControl(node, msg, send, done);
         fanCtrl.setUiConfig(config);
         fanCtrl.setPayloadConfig(msg.payload);
@@ -42,4 +62,4 @@ const nodeInit: NodeInitializer = (RED): void => {
   RED.nodes.registerType('fan-control', FanControlNodeConstructor);
 };
 
-export = nodeInit;
+module.exports = nodeInit;
