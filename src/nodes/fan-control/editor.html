@@ -46,10 +46,10 @@
 
 <div class="form-row">
   <label
-      for="node-input-speed"
-      data-i18n="server-state-changed.label.speed"
+      for="node-input-instruction"
+      data-i18n="server-state-changed.label.instruction"
   ></label>
-  <select id="node-input-speed" style="width: 20%">
+  <select id="node-input-instruction" style="width: 20%">
     <option value="on" text="turn on, do not change speed" ></option>
     <option value="off" text="turn off" ></option>
     <option value="1" text="speed 1" ></option>
@@ -59,8 +59,8 @@
     <option value="5" text="speed 5" ></option>
     <option value="6" text="speed 6" ></option>
   </select>
-  <input type="text" id="node-input-speed" style="width: 50%" />
-  <input type="hidden" id="node-input-speed" />
+  <input type="text" id="node-input-instruction" style="width: 50%" />
+  <input type="hidden" id="node-input-instruction" />
 </div>
 
 
@@ -102,12 +102,12 @@
   <input type="checkbox" id="node-input-debug" />
   <label
       for="node-input-debug"
-      data-i18n=""server-state-changed.label.debug"
+      data-i18n="server-state-changed.label.debug"
   ></label>
 </div>
 
 
-<script type="text/html" data-template-name="fan-control">
+<!-- <script type="text/html" data-template-name="fan-control">
   <div class="form-row">
     <label for="node-input-fan"><i class="fa fa-bolt"></i> Fan</label>
     <input type="text" id="node-input-fan">
@@ -136,10 +136,6 @@
   <input type="radio" id="node-input-service-off" value="off">
 </div>
 <div class="form-row">
-  <label for="node-input-speed"><i class="fa fa-sort"></i> Speed (1-6)</label>
-  <input type="number" id="node-input-speed" placeholder="">
-</div>
-<div class="form-row">
   <label for="node-input-timeout"><i class="fa fa-hourglass-end"></i> Turn off after (minutes)</label>
   <input type="number" id="node-input-timeout" placeholder="10000">
 </div>
@@ -155,4 +151,4 @@
     and so we ensure a fan can receive speed change messages. 
     Also allows the fan to be turned on for a specified duration.
   </p>
-</script>
+</script> -->

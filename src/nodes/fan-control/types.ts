@@ -1,23 +1,55 @@
-import { EntityShortId } from 'epdoc-node-red-hautil';
-import { Integer, isNonEmptyString } from 'epdoc-util';
-import { Node, NodeDef } from 'node-red';
+import { EntityId } from 'epdoc-node-red-hautil';
+import { Milliseconds } from 'epdoc-timeutil';
+import { Integer, asInt, isNonEmptyString } from 'epdoc-util';
+import { NodeDef } from 'node-red';
+import { BaseNodeConfig } from '../common/types';
 
-export type FanControlNodeOpts = {
-  fan: EntityShortId;
-  service: 'on' | 'off';
-  speed: Integer;
-  timeout: Integer;
-  debug: boolean;
+export type NumberAsString = string;
+
+export enum FanControlInstruction {
+  TurnOn = 'turn_on',
+  TurnOff = 'turn_off',
+  Speed1 = '1',
+  Speed2 = '2',
+  Speed3 = '3',
+  Speed4 = '4',
+  Speed5 = '5',
+  Speed6 = '6'
+}
+
+export type FanControlNodeInst = {
+  service: 'turn_on' | 'turn_off';
+  speed?: Integer;
 };
-export function isFanControlNodeOpts(val: any): val is FanControlNodeOpts {
+
+export function fanControlInstructionMap(inst: FanControlInstruction) {
+  let result: FanControlNodeInst = { service: 'turn_on' };
+  if (inst === FanControlInstruction.TurnOn) {
+    return result;
+  }
+  if (inst === FanControlInstruction.TurnOff) {
+    result.service = 'turn_off';
+    return result;
+  }
+  result.speed = asInt(inst);
+  return result;
+}
+
+export interface FanControlNodeConfig extends BaseNodeConfig {
+  enitityId: EntityId;
+  instruction: FanControlInstruction;
+  for: NumberAsString;
+  forUnits: TimeUnit;
+  retryDelay: Milliseconds[];
+}
+
+export function isFanControlNodeConfig(val: any): val is FanControlNodeConfig {
   return val && isNonEmptyString(val.fan);
 }
 
-export interface FanNodeDef extends NodeDef, FanControlNodeOpts {}
+export interface FanNodeDef extends NodeDef, FanControlNodeConfig {}
 
 export type FanNodeCredentials = Record<string, unknown>;
-
-export interface FanControlNode extends Node<FanNodeCredentials> {}
 
 export enum NodeColor {
   Action = '#46B1EF',
@@ -28,4 +60,12 @@ export enum NodeColor {
   Deprecated = '#A6BBCF',
   Event = '#399CDF',
   HaBlue = '#41BDF5'
+}
+
+export enum TimeUnit {
+  Milliseconds = 'milliseconds',
+  Seconds = 'seconds',
+  Minutes = 'minutes',
+  Hours = 'hours',
+  Days = 'days'
 }

@@ -21,7 +21,7 @@ module.exports = function (RED: NodeAPI) {
 import { NodeRedDoneFunction, NodeRedSendFunction } from 'epdoc-node-red-hautil';
 import { NodeAPI, NodeInitializer, NodeMessage } from 'node-red';
 import { FanControl } from './fan-control';
-import { FanControlNode, FanNodeDef, isFanControlNodeOpts } from './types';
+import { FanControlNode, FanNodeDef, isFanControlNodeProps } from './types';
 
 const nodeInit: NodeInitializer = (RED: NodeAPI): void => {
   function FanControlNodeConstructor(this: FanControlNode, config: FanNodeDef) {
@@ -30,7 +30,7 @@ const nodeInit: NodeInitializer = (RED: NodeAPI): void => {
       RED.nodes.createNode(this, config);
       let node: FanControlNode = this as FanControlNode;
 
-      if (!isFanControlNodeOpts(config)) {
+      if (!isFanControlNodeProps(config)) {
         return;
       }
       // this.server = RED.nodes.getNode(config.server);
