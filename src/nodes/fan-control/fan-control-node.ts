@@ -19,11 +19,11 @@ module.exports = function (RED: NodeAPI) {
 */
 
 import { NodeRedDoneFunction, NodeRedSendFunction } from 'epdoc-node-red-hautil';
-import { NodeInitializer, NodeMessage } from 'node-red';
+import { NodeAPI, NodeInitializer, NodeMessage } from 'node-red';
 import { FanControl } from './fan-control';
 import { FanControlNode, FanNodeDef, isFanControlNodeOpts } from './types';
 
-const nodeInit: NodeInitializer = (RED): void => {
+const nodeInit: NodeInitializer = (RED: NodeAPI): void => {
   function FanControlNodeConstructor(this: FanControlNode, config: FanNodeDef) {
     try {
       console.log('FanControlNode');

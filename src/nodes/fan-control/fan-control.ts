@@ -25,6 +25,11 @@ const REG = {
   off: new RegExp(/off$/, 'i')
 };
 
+export type FanListItem = {
+  entityShortId: EntityShortId;
+  name: string;
+};
+
 export type PayloadSendFunction = (payload: ServicePayload) => void | Promise<void>;
 export type FanRunParams = {
   fan: EntityShortId;
@@ -82,6 +87,10 @@ export class FanControl {
   }
   get flow(): NodeContextData {
     return this._node.context().flow;
+  }
+
+  getFanList(): FanListItem[] {
+    return this.global.get('fan_control_fan_list') as FanListItem[];
   }
 
   setUiConfig(config?: NodeDef): this {
