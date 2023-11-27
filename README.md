@@ -1,14 +1,13 @@
-# epdoc-node-red-hautil
+# epdoc-node-red-hassio
 
-General purpose utilities for use in [Function
-Nodes](https://nodered.org/docs/user-guide/writing-functions) with
-[Node-RED](https://nodered.org/) and [Home
-Assistant](https://www.home-assistant.io/).
+<span style="color:gold">**THIS PROJECT IS STILL IN DEVELOPMENT AND SHOULD NOT BE USED IN PRODUCTION. 
+All APIs and documentaion are subject to change.**</span>
 
- * `Service` wrapper, to generate payloads for use with the Call Service node.
- * `HA` wrapper, to retrieve state from home assistant
+Custom Nodes for Home Assistant in Node-RED
 
 ## Developer Notes
+
+THIS PROJECT IS STILL IN DEVELOPMENT and is not ready for public consumption.
 
 This module was originally written in ES6 and transpiled using Babel to generate
 a module that could be loaded using `require` or `import`. Soon thereafter it
@@ -158,118 +157,3 @@ Node-RED's Function Node editor.
 You can find a more exhaustive and OUTDATED discussion of various ways to use your own
 libraries in Node-RED [here](./NODE-RED.md).
 
-## Service Class
-
-The
-[Service](https://github.com/jpravetz/epdoc-node-red-hautil/blob/master/src/service.ts)
-object is used to build a payload that can be passed to the [Call Service
-node](https://zachowj.github.io/node-red-contrib-home-assistant-websocket/node/call-service.html).
-Provided too are a number of subclasses for specific types of entities,
-including `SwitchService`, `LightService`, `AlarmService`, `CoverService`,
-`FanService` and, finally `FanSpeed6Service`, which is a 6-speed fan that uses a
-[Bond Bridge](https://bondhome.io/product/bond-bridge/) to set the fan speed and
-a smart switch to turn the fans on and off. 
-
-There is the possibility for many more subclasses to be written, or you can
-build your service payload directly using the base `Service` class, or one of
-the other subclasses. 
-
-The following shows the code for a [function
-node](https://nodered.org/docs/user-guide/writing-functions) that uses three
-equivalent implementations to tell a
-[Cover](https://www.home-assistant.io/integrations/cover/) to stop.
-
-```js
-let payload = newService('cover.garage').service('stop_cover').payload();
-
-payload = new CoverService('garage').stop().payload();
-
-let payloadBuilder = newCoverService('garage');
-payload = payloadBuilder.stop().payload();
-msg.payload = payload;
-return msg;
-```
-
-The following function node code creates a payload that can be used to set a
-light's brightness to 50%.
-
-```js
-msg.payload = new LightService('bedroom').percentage(50).payload();
-return msg;
-```
-
-The following function node code shows several ways to create a payload that
-turns a light on.
-
-```js
-// In this example we directly use the LightService, 
-// which will set the domain to `light` for us. 
-// The LightService is a subclass of SwitchService.
-msg.payload = new LightService('bedroom').on().payload();
-
-// In this example we use the SwitchService, but change it's default
-// domain from `switch` to `light` by specifying the full `entity_id`.
-msg.payload = new SwitchService('light.bedroom').on().payload();
-
-// Override the default domain using the `domain` method.
-msg.payload = new SwitchService('bedroom').domain('light').on().payload();
-return msg;
-```
-
-## HA Class
-
-The
-[HA](https://github.com/jpravetz/epdoc-node-red-hautil/blob/master/src/service.tsbond)
-class is again meant for use in Function Nodes. It provides a wrapper for a Home
-Assistant instance, and has methods to access the state of Home Assitant
-entities.
-
-Example retrieves the state of a light.
-
-```js
-const gHA = global.get('homeassistant');
-
-const ha = new HA(gHA);
-const lightEntity = ha.entity('light.bedroom');
-const isOn = lightEntity.isOn();
-node.warn(`The ${lightEntity.id} is ${isOn?'on':'off'}`)
-```
-
-### HA retrieveSensorsData method
-
-This method takes a dictionary containing an `id` field and optional `type`
-field and retrieves sensor data for the listed sensors. This is a shortcut that
-you might use when you have multiple sensors that you efficiently want to get
-data for, and you need to access that data more than once.
-
-```js
-const gHA = global.get('homeassistant');
-const ha = new HA(gHA);
-
-const sensorDict = {
-  sensor1: { id: 'input_boolean.evening', type: 'boolean' },
-  sensor2: { id: 'sensor.outdoor_temperature', type: 'number' }
-};
-
-ha.retrieveSensorsData(sensorDict);
-if( sensorDict.sensor1.on ) {
-  console.log('It is the evening');
-}
-if( sensorDict.sensor2.val > 30 ) {
-  console.log('It is hot today');
-}
-```
-
-The above code is equivalent to the following:
-
-```js
-const gHA = global.get('homeassistant');
-const ha = new HA(gHA);
-
-if( ha.entity('input_boolean.evening').isOn() ) {
-  console.log('It is the evening');
-}
-if( ha.entity('sensor.outdoor_temperature').asNumber() > 30 ) {
-  console.log('It is hot today');
-}
-```

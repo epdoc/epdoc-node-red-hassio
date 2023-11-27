@@ -10,7 +10,7 @@
   "node-red": {
     "version": ">=3.0.0",
     "nodes": {
-      "fan-control": "./dist/nodes/fan-control/fan-control-node.js",
+      "fan-control": "./dist/nodes/fan-control/fan-control.js",
       "lower-case": "./dist/nodes/lower-case/lower-case.js"
     }
   },

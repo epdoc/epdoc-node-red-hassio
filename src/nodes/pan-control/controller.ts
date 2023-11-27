@@ -1,6 +1,6 @@
-import { FanControlNode } from '.';
 import Status from '../common/Status';
 import NodeRedContextService from '../common/context-service';
+import { FanControlNode } from './fan-control';
 
 export class FanControlController {
   node: FanControlNode;
