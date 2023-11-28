@@ -7,6 +7,7 @@
     "outDir": "./dist",
     "noEmit": false,
     "esModuleInterop": true,
+    "resolveJsonModule": true,
     "strict": true,
     "strictPropertyInitialization": false
   },
@@ -35,7 +36,7 @@
     "entryPoints": ["src/index.ts"],
     "out": "docs"
   },
-  "include": ["src/**/*.ts","src/**/*.html"],
+  "include": ["src/**/*.ts", "src/**/*.html"],
   "exclude": ["node_modules"],
   "x_compilerOptions": {
     "x_outFile": "./dist/index.ts",

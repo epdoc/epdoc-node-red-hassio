@@ -39,8 +39,8 @@ module.exports = function (RED: NodeAPI) {
 
     try {
       const processMsg = async (msg: NodeMessage, send: NodeRedSendFunction, done: NodeRedDoneFunction) => {
-        node.log('Processing fan-control message');
-        msg.payload = 'Processed fan-control message';
+        node.log(`Processing fan-control message: ${msg.payload}`);
+        // msg.payload = 'Processed fan-control message';
         node.send(msg);
         // const fanCtrl = new FanController(node, msg, send, done);
         // fanCtrl.setUiConfig(config);

@@ -3,15 +3,15 @@
   "version": "1.0.0",
   "description": "Node-RED code for my own Home Assistant deployment",
   "private": false,
-  "main": "dist/index.js",
+  "main": "dist/src/index.js",
   "keywords": [
     "xnode-red"
   ],
   "node-red": {
     "version": ">=3.0.0",
     "nodes": {
-      "fan-control": "./dist/nodes/fan-control/fan-control.js",
-      "lower-case": "./dist/nodes/lower-case/lower-case.js"
+      "fan-control": "./dist/src/nodes/fan-control/fan-control.js",
+      "lower-case": "./dist/src/nodes/lower-case/lower-case.js"
     }
   },
   "license": "MIT",
@@ -26,7 +26,7 @@
   "scripts": {
     "clean": "rm -rf dist docs coverage && echo Done.",
     "build": "rm -rf dist && tsc && npm run copy",
-    "copy": "copyfiles -u 1 './src/**/*.{css,html,svg}' './dist/'",
+    "copy": "copyfiles './src/**/*.{css,html,svg}' './dist/'",
     "format": "prettier --write 'src/**/*.ts' 'test/**/*.ts' '*.js' '*.json'",
     "docs": "./node_modules/typedoc/bin/typedoc",
     "test": "jest -t lower-case-node",

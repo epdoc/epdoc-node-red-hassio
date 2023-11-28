@@ -21,6 +21,9 @@
     for: { value: '0' },
     forUnits: { value: 'minutes' }
   },
+  oneditprepare: function() {
+    console.log('oneditprepare')
+  }
   });
 </script>
 
@@ -29,28 +32,13 @@
   <input type="hidden" id="node-input-outputs" />
 
   <div class="form-row">
-    <label
-        for="node-input-name"
-        data-i18n="server-state-changed.label.name"
-    ></label>
+    <label for="node-input-name"><i class="icon-tag"></i> Name</label>
     <input type="text" id="node-input-name" />
   </div>
 
   <div class="form-row">
-    <label
-        for="node-input-server"
-        data-i18n="server-state-changed.label.server"
-    ></label>
-    <input type="text" id="node-input-server" />
-  </div>
-
-  <div class="form-row">
-    <label
-        for="node-input-entityidfilter"
-        data-i18n="server-state-changed.label.entity"
-    >
-    </label>
-    <select type="text" id="node-input-entityIdType">
+    <label for="node-input-entityidfilter"><i class="icon-tag"></i> Fan</label>
+    <select type="text" id="node-input-entity">
         <option
             value="exact"
             data-i18n="server-state-changed.label.entity_option.exact"
@@ -76,14 +64,14 @@
         data-i18n="server-state-changed.label.instruction"
     ></label>
     <select id="node-input-instruction" style="width: 20%">
-      <option value="on" text="turn on, do not change speed" ></option>
-      <option value="off" text="turn off" ></option>
-      <option value="1" text="speed 1" ></option>
-      <option value="2" text="speed 2" ></option>
-      <option value="3" text="speed 3" ></option>
-      <option value="4" text="speed 4" ></option>
-      <option value="5" text="speed 5" ></option>
-      <option value="6" text="speed 6" ></option>
+      <option value="on">turn on, do not change speed</option>
+      <option value="off">turn off</option>
+      <option value="1">speed 1</option>
+      <option value="2">speed 2</option>
+      <option value="3">speed 3</option>
+      <option value="4">speed 4</option>
+      <option value="5">speed 5</option>
+      <option value="6">speed 6</option>
     </select>
     <input type="text" id="node-input-instruction" style="width: 50%" />
     <input type="hidden" id="node-input-instruction" />
@@ -91,45 +79,22 @@
 
 
   <div class="form-row">
-    <label
-        for="node-input-for"
-        data-i18n="For"
-    ></label
-    >&nbsp;
+    <label>For</label>&nbsp;
     <div class="ha-multi-item-row">
         <input type="text" id="node-input-for" />
-        <input type="hidden" id="node-input-forType" />
         <select id="node-input-forUnits">
-            <option
-                value="milliseconds"
-                data-i18n="server-state-changed.label.for_option.milliseconds"
-            ></option>
-            <option
-                value="seconds"
-                data-i18n="server-state-changed.label.for_option.seconds"
-            ></option>
-            <option
-                value="minutes"
-                data-i18n="server-state-changed.label.for_option.minutes"
-            ></option>
-            <option
-                value="hours"
-                data-i18n="server-state-changed.label.for_option.hours"
-            ></option>
-            <option
-                value="days"
-                data-i18n="server-state-changed.label.for_option.days"
-            ></option>
+          <option value="milliseconds">Milliseconds</option>
+          <option value="seconds">seconds</option>
+          <option value="minutes">minutes</option>
+          <option value="hours">hours</option>
+          <option value="days">days</option>
         </select>
     </div>
   </div>
 
   <div class="form-row checkbox-option">
     <input type="checkbox" id="node-input-debug" />
-    <label
-        for="node-input-debug"
-        data-i18n="server-state-changed.label.debug"
-    ></label>
+    <label for="node-input-debug">Debug enabled</label>
   </div>
 </script>
 
