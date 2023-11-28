@@ -1,21 +1,23 @@
 import { EntityId, EntityShortId, FanSpeed6Service, FanSpeed6Speed, isFanSpeed6Speed } from 'epdoc-node-red-hautil';
 import { Milliseconds } from 'epdoc-timeutil';
-import { isInteger, isNonEmptyArray, isNonEmptyString, isNumber, isString } from 'epdoc-util';
+import { Integer, asInt, isDefined, isNonEmptyArray, isNonEmptyString, isNumber, isString } from 'epdoc-util';
+import { FanControlInstruction, NumberAsString, TimeUnit } from './types';
 
 const REG = {
   onoff: new RegExp(/^(on|off)$/, 'i'),
   on: new RegExp(/on$/, 'i'),
-  off: new RegExp(/off$/, 'i')
+  off: new RegExp(/off$/, 'i'),
+  speed: new RegExp(/[1-6]/)
 };
 
 /**
  * Container for Fan Control parameters
  */
 export class FanControlParams {
-  public debug = false;
+  public enableDebug = false;
   public shortId: EntityShortId;
   public speed: FanSpeed6Speed = 0;
-  public service: 'on' | 'off' = 'off';
+  public service: FanControlInstruction.TurnOn | FanControlInstruction.TurnOff = FanControlInstruction.TurnOff;
   public bOn: boolean = false;
   public timeout: Milliseconds = 0;
   public retryDelay: Milliseconds[] = [1000, 3000];
@@ -25,7 +27,7 @@ export class FanControlParams {
 
   setDebug(val: any): this {
     if (val === true) {
-      this.debug = true;
+      this.enableDebug = true;
     }
     return this;
   }
@@ -79,21 +81,42 @@ export class FanControlParams {
     return this;
   }
 
-  setTimeout(val: Milliseconds | undefined): this {
-    if (isInteger(val)) {
-      this.timeout = val;
+  setInstruction(inst: FanControlInstruction): this {
+    if (inst === FanControlInstruction.TurnOn || inst === FanControlInstruction.TurnOff) {
+      this.service = inst;
+    } else if (REG.speed.test(inst)) {
+      this.service = FanControlInstruction.TurnOn;
+      this.setSpeed(asInt(inst));
+    }
+    return this;
+  }
+
+  setTimeout(val: NumberAsString | Integer | undefined, units: TimeUnit = TimeUnit.Milliseconds): this {
+    if (isDefined(val)) {
+      const t = asInt(val);
+      if (units === TimeUnit.Milliseconds) {
+        this.timeout = t;
+      } else if (units === TimeUnit.Seconds) {
+        this.timeout = t * 1000;
+      } else if (units === TimeUnit.Minutes) {
+        this.timeout = t * 60 * 1000;
+      } else if (units === TimeUnit.Hours) {
+        this.timeout = t * 3600 * 1000;
+      } else if (units === TimeUnit.Days) {
+        this.timeout = t * 24 * 3600 * 1000;
+      }
     }
     return this;
   }
 
   on(val: boolean = true): this {
-    this.service = val ? 'on' : 'off';
+    this.service = val ? FanControlInstruction.TurnOn : FanControlInstruction.TurnOff;
     this.bOn = val;
     return this;
   }
 
   off(val: boolean = true): this {
-    this.service = val ? 'off' : 'on';
+    this.service = val ? FanControlInstruction.TurnOff : FanControlInstruction.TurnOn;
     this.bOn = val ? false : true;
     return this;
   }

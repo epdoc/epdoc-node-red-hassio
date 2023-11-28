@@ -16,8 +16,9 @@ import {
 } from 'epdoc-node-red-hautil';
 import { Milliseconds } from 'epdoc-timeutil';
 import { Integer, delayPromise, isDict, isNonEmptyString } from 'epdoc-util';
-import { Node, NodeContext, NodeContextData, NodeDef, NodeMessage } from 'node-red';
+import { Node, NodeContext, NodeContextData, NodeMessage } from 'node-red';
 import { FanControlParams } from './fan-control-params';
+import { FanControlDef, isFanControlDef } from './types';
 
 const REG = {
   onoff: new RegExp(/^(on|off)$/, 'i'),
@@ -74,9 +75,13 @@ export class FanController {
   protected _fan: Entity;
   protected _switch: Entity;
 
-  constructor(node: Node, msg: NodeMessage, send: NodeRedSendFunction, done: NodeRedDoneFunction) {
+  constructor(node: Node, config: FanControlDef) {
     this._node = node;
     this._ha = new HA(this.global);
+    this.setUiConfig(config);
+  }
+
+  setMessage(msg: NodeMessage, send: NodeRedSendFunction, done: NodeRedDoneFunction): void {
     this._msg = msg;
     this._nodeSend = send;
     this._nodeDone = done;
@@ -93,14 +98,13 @@ export class FanController {
     return this.global.get('fan_control_fan_list') as FanListItem[];
   }
 
-  setUiConfig(config?: NodeDef): this {
-    if (isFanControlUiConfig(config)) {
+  setUiConfig(config?: FanControlDef): this {
+    if (isFanControlDef(config)) {
       this.opts
-        .setDebug(config.debug)
+        .setDebug(config.enableDebug)
         .setFan(config.fan)
-        .setSpeed(config.speed)
-        .setService(config.service)
-        .setTimeout(config.timeout);
+        .setInstruction(config.instruction)
+        .setTimeout(config.for, config.forUnits);
       this.initAfter();
     }
     return this;
@@ -130,7 +134,7 @@ export class FanController {
   }
 
   initAfter(): this {
-    if (this.opts.debug === true) {
+    if (this.opts.enableDebug === true) {
       this.log.debug = this.node.warn;
     }
     if (isNonEmptyString(this.opts.shortId)) {
