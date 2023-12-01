@@ -31,29 +31,30 @@ module.exports = function (RED: NodeAPI) {
 
     const fanCtrl = new FanController(node, config as FanControlDef);
 
-    try {
-      const processMsg = async (msg: NodeMessage, send: NodeRedSendFunction, done: NodeRedDoneFunction) => {
+    const processMsg = async (msg: NodeMessage, send: NodeRedSendFunction, done: NodeRedDoneFunction) => {
+      try {
         node.log(`Processing fan-control message: ${msg.payload}`);
         // msg.payload = 'Processed fan-control message';
         // fanCtrl.setMessage(msg, send, done);
-        node.send(msg);
+        send(msg);
         // const fanCtrl = new FanController(node, msg, send, done);
         // fanCtrl.setUiConfig(config);
         // fanCtrl.setPayloadConfig(msg.payload);
         // fanCtrl.run().then((resp) => {
         //   fanCtrl.done();
         // });
-      };
+      } catch (err) {
+        console.log(err);
+        done(err as Error);
+      }
+    };
 
-      const done = () => {
-        node.log('fan-control done');
-      };
+    const done = () => {
+      node.log('fan-control done');
+    };
 
-      node.on('input', processMsg);
-      // node.on('close', done);
-    } catch (err) {
-      console.log(err);
-    }
+    node.on('input', processMsg);
+    // node.on('close', done);
   }
   RED.nodes.registerType('fan-control', FanControlNode);
 };

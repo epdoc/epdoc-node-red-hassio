@@ -77,7 +77,8 @@ export class FanController {
 
   constructor(node: Node, config: FanControlDef) {
     this._node = node;
-    this._ha = new HA(this.global);
+    console.log(JSON.stringify(this));
+    // this._ha = new HA(this.global);
     this.setUiConfig(config);
   }
 
@@ -85,6 +86,7 @@ export class FanController {
     this._msg = msg;
     this._nodeSend = send;
     this._nodeDone = done;
+    this._node.status({ fill: 'green', shape: 'dot', text: 'constructed' });
   }
 
   get global(): NodeContextData {

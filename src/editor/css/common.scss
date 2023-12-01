@@ -1,0 +1,227 @@
+@import 'variables';
+
+#version-update {
+    padding: 0.5em;
+    margin-bottom: 1em;
+
+    p {
+        margin: 0;
+    }
+
+    strong {
+        padding-right: 5px;
+    }
+
+    a,
+    a:hover {
+        color: $primary-text-color;
+    }
+}
+
+.home-assistant {
+    .form-row {
+        &.checkbox-option {
+            input {
+                margin-left: 105px;
+                margin-right: 5px;
+                display: inline-block;
+                width: auto;
+                vertical-align: top;
+            }
+
+            label {
+                width: auto;
+            }
+        }
+
+        &.checkbox-option-left {
+            input {
+                display: inline-block;
+                margin-right: 5px;
+                width: auto;
+                vertical-align: top;
+            }
+
+            label {
+                width: auto;
+                margin-right: 20px;
+            }
+        }
+
+        &.add-spacer {
+            border-bottom: 1px solid $primary-text-color;
+        }
+
+        > select {
+            width: 70%;
+        }
+
+        .ha-multi-item-row {
+            display: inline-flex;
+            gap: 10px;
+            width: 70%;
+
+            select {
+                width: auto;
+            }
+
+            .red-ui-typedInput-container {
+                flex: 1;
+                width: auto;
+            }
+        }
+    }
+
+    .editable-list-row {
+        margin-bottom: 4px;
+    }
+
+    li span.property-type {
+        font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif;
+        color: $primary-text-color;
+        font-style: italic;
+        font-size: 11px;
+        float: right;
+    }
+
+    .ha-alert-box {
+        padding: 10px;
+        margin-bottom: 10px;
+        border-radius: 4px;
+    }
+
+    .ha-alpha-box {
+        @extend .ha-alert-box;
+        color: $alpha-text-color;
+        background-color: $alpha-background-color;
+    }
+
+    .ha-beta-box {
+        @extend .ha-alert-box;
+        color: $beta-text-color;
+        background-color: $beta-background-color;
+    }
+}
+
+#constraint-list {
+    min-width: 446px;
+
+    input {
+        width: 65%;
+    }
+}
+
+#output-list input {
+    width: 62%;
+}
+
+#clearIfState {
+    position: absolute;
+    margin-left: 2px;
+}
+
+.ha-node-label-legacy {
+    fill: #fdfd96;
+}
+
+.home-assistant-custom-block {
+    .custom-block-title {
+        font-weight: 600;
+    }
+
+    &.tip,
+    &.warning,
+    &.danger {
+        padding: 0.1rem 1.5rem;
+        border-left-width: 0.5rem;
+        border-left-style: solid;
+        margin: 1rem 0;
+    }
+
+    &.tip {
+        background-color: #f3f5f7;
+        border-color: #42b983;
+        color: #2c3e50;
+
+        a {
+            color: #3eaf7c;
+        }
+    }
+
+    &.warning {
+        background-color: #fff6c6;
+        border-color: #e7c000;
+        color: #6b5900;
+
+        .custom-block-title {
+            color: #b29400;
+        }
+
+        a {
+            color: #2c3e50;
+        }
+    }
+
+    &.danger {
+        background-color: #ffe6e6;
+        border-color: #c00;
+        color: #4d0000;
+
+        .custom-block-title {
+            color: #900;
+        }
+
+        a {
+            color: #2c3e50;
+        }
+    }
+}
+
+.home-assisant-badge {
+    display: inline-block;
+    font-size: 12px;
+    height: 16px;
+    line-height: 16px;
+    border-radius: 3px;
+    padding: 0 6px;
+    color: #fff;
+    background-color: #42b983;
+
+    &.tip,
+    &.green {
+        background-color: #42b983;
+    }
+    &.error {
+        background-color: #da5961;
+    }
+    &.warning,
+    &.warn,
+    &.yellow {
+        background-color: #e7c000;
+    }
+    & + & {
+        margin-left: 5px;
+    }
+}
+
+#upgrade-ha-node {
+    padding: 4px 12px;
+    background: $home-assistant-color;
+    color: #eee;
+    display: inline-block;
+    line-height: 22px;
+    font-size: 14px;
+    text-decoration: none;
+    margin: 0;
+    border: 0;
+}
+
+.ui-autocomplete {
+    .ui-menu-item-wrapper {
+        .sublabel {
+            color: $secondary-text-color;
+            font-size: smaller;
+            margin: 4px 0;
+        }
+    }
+}
