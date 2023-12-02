@@ -1,4 +1,4 @@
-import { i18n as haI18n } from './i18n';
+import { i18n as haI18n } from '../../../tmp/i18n';
 
 export function createDeviceExtraFields(fields: any[] = [], capabilities: any[] = []) {
   const elements: JQuery[] = [];

@@ -1,5 +1,5 @@
+import { i18nKeyandParams } from '../../../tmp/i18n';
 import { RED } from '../../globals';
-import { i18nKeyandParams } from './i18n';
 
 export interface BaseErrorConstructor {
   data?: i18nKeyandParams;

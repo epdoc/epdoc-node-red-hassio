@@ -22,6 +22,7 @@ import](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operat
 as you will see in the next section.
 
 ```bash
+npm install -g gulp-cli
 git clone epdoc-node-red-hautil
 cd epdoc-node-red-hautil
 bun install

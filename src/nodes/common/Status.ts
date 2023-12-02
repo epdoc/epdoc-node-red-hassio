@@ -1,9 +1,9 @@
 import { NodeStatus } from 'node-red';
 
+import { i18nKeyandParams } from '../../../tmp/i18n';
 import { RED } from '../../globals';
-import { isTranslationKey } from './BaseError';
+import { isTranslationKey } from './base-error';
 import { formatDate } from './datetime-format';
-import { i18nKeyandParams } from './i18n';
 import { BaseNode } from './types';
 
 export enum StatusColor {
