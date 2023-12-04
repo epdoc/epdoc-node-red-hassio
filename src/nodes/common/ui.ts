@@ -1,5 +1,3 @@
-import { i18n as haI18n } from '../../../tmp/i18n';
-
 export function createDeviceExtraFields(fields: any[] = [], capabilities: any[] = []) {
   const elements: JQuery[] = [];
   fields.forEach((field) => {
@@ -36,9 +34,7 @@ export function createDeviceExtraFields(fields: any[] = [], capabilities: any[] 
         break;
       }
       default: {
-        const text = haI18n('ha-device.error.unknown_field_type', {
-          type: field.type
-        });
+        const text = `Unknown field type: ${field.type}`;
         const element = createDeviceError(text, {
           type: field.type
         });
@@ -125,21 +121,15 @@ function createDeviceDuration(field: Record<string, any>, store: any) {
   const id = `deviceExtra-${field.name}`;
   const value = store ? store.value : '';
   const selected = (unit: string) => (store && unit === store.unit ? 'selected' : '');
-  const namespace = 'ha-device.label';
-  const i18n = {
-    seconds: haI18n(`${namespace}.seconds`),
-    minutes: haI18n(`${namespace}.minutes`),
-    hours: haI18n(`${namespace}.hours`)
-  };
   const html = `
         <label for="${id}">
             <i class="fa fa-clock-o"></i> ${field.name}
         </label>
         <input type="text" id="${id}" style="width: 35%" value="${value}"/>
         <select id="${id}Units" style="width: 35%">
-            <option value="seconds" ${selected('seconds')}>${i18n.seconds}</option>
-            <option value="minutes" ${selected('minutes')}>${i18n.minutes}</option>
-            <option value="hours" ${selected('hours')}>${i18n.hours}</option>
+            <option value="seconds" ${selected('seconds')}>Seconds</option>
+            <option value="minutes" ${selected('minutes')}>Minutes</option>
+            <option value="hours" ${selected('hours')}>Hours</option>
         </select>`;
   return wrapWithRow(html);
 }
@@ -172,9 +162,7 @@ function createDeviceString(field: Record<any, string>, store: Record<any, strin
 }
 
 function createDeviceError(text: string, opts: any = {}) {
-  const html = `<label class="error"><i class="fa fa-exclamation-triangle"></i> Error</label>${text} -- <a href="https://github.com/zachowj/node-red-contrib-home-assistant-websocket/issues/new?title=[Device Node] Unknown extra type: ${
-    opts.type
-  }" target="_blank"> ${haI18n('ha-device.error.report')}</a>`;
+  const html = `<label class="error"><i class="fa fa-exclamation-triangle"></i> Error</label>${text} -- <a href="https://github.com/zachowj/node-red-contrib-home-assistant-websocket/issues/new?title=[Device Node] Unknown extra type: ${opts.type}" target="_blank"> Report</a>`;
   return wrapWithRow(html);
 }
 

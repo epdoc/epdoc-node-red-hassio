@@ -1,8 +1,5 @@
 import { NodeStatus } from 'node-red';
 
-import { i18nKeyandParams } from '../../../tmp/i18n';
-import { RED } from '../../globals';
-import { isTranslationKey } from './base-error';
 import { formatDate } from './datetime-format';
 import { BaseNode } from './types';
 
@@ -52,7 +49,7 @@ export default class Status<T extends BaseNode = BaseNode> {
       status = {
         fill: StatusColor.Grey,
         shape: StatusShape.Dot,
-        text: 'home-assistant.status.disabled'
+        text: 'DISABLED'
       };
     }
 
@@ -71,42 +68,35 @@ export default class Status<T extends BaseNode = BaseNode> {
     this.set({ text });
   }
 
-  public setError(text: i18nKeyandParams = 'home-assistant.status.error'): void {
+  public setError(text: string = 'error'): void {
     this.set({
       fill: StatusColor.Red,
       shape: StatusShape.Ring,
-      text: this.translateText(text)
+      text: text
     });
   }
 
-  public setFailed(text: i18nKeyandParams = 'home-assistant.status.failed'): void {
+  public setFailed(text: string = 'failed'): void {
     this.set({
       fill: StatusColor.Red,
       shape: StatusShape.Ring,
-      text: this.translateText(text)
+      text: text
     });
   }
 
-  public setSending(text: i18nKeyandParams = 'home-assistant.status.sending'): void {
+  public setSending(text: string = 'sending'): void {
     this.set({
       fill: StatusColor.Yellow,
       shape: StatusShape.Dot,
-      text: this.translateText(text)
+      text: text
     });
   }
 
-  public setSuccess(text: i18nKeyandParams = 'home-assistant.status.success'): void {
+  public setSuccess(text: string = 'success'): void {
     this.set({
       fill: StatusColor.Green,
       shape: StatusShape.Dot,
-      text: this.translateText(text)
+      text: text
     });
-  }
-
-  protected translateText(data: i18nKeyandParams): string {
-    const [key, params] = Array.isArray(data) ? data : [data, undefined];
-    const message = isTranslationKey(key) ? RED._(key, params) : key;
-
-    return `${message} ${this.dateString}`;
   }
 }

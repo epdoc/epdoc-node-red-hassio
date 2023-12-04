@@ -9,6 +9,7 @@ const concat = require('gulp-concat');
 const flatmap = require('gulp-flatmap');
 const lazypipe = require('lazypipe');
 const merge = require('merge-stream');
+const gulpMerge = require('gulp-merge');
 const mergeJson = require('gulp-merge-json');
 const wrap = require('gulp-wrap');
 const { src, dest, series, task, watch, parallel } = require('gulp');
@@ -55,6 +56,7 @@ const uiCssWrap = '<style><%= contents %></style>';
 const uiJsWrap = '<script type="text/javascript"><%= contents %></script>';
 const uiFormWrap = '<script type="text/html" data-template-name="<%= data.type %>"><%= data.contents %></script>';
 const uiHelpWrap = '<script type="text/html" data-help-name="<%= data.type %>"><%= data.contents %></script>';
+const tmpFilePath = 'tmpBuildFiles';
 const resourcePath = 'resources';
 const resourceFiles = [
   `<script src="${resourcePath}/select2.full.min.js?v=4.1.0-rc.0"></script>`
@@ -85,42 +87,18 @@ const buildSass = lazypipe()
         removeAll: true
       }
     })
-  ])
-  .pipe(wrap, uiCssWrap);
+  ]);
+// .pipe(wrap, uiCssWrap);
 exports.buildSass = buildSass;
 
-// Shrink js and wrap it
-// const buildJs = lazypipe().pipe(terser).pipe(wrap, uiJsWrap);
-// exports.buildJs = buildJs;
+const buildCss = () => {
+  return merge(src(['src/editor/css/**/*.scss', 'src/nodes/**/*.scss', '!_*.scss']).pipe(buildSass())).pipe(
+    dest(tmpFilePath)
+  );
+};
+exports.buildCss = buildCss;
 
-// const buildForm = lazypipe()
-//   .pipe(gulpHtmlmin, {
-//     collapseWhitespace: true,
-//     minifyCSS: true
-//   })
-//   .pipe(() => wrap(uiFormWrap, { type: nodeMap[type].type }, { variable: 'data' }));
-// exports.buildForm = buildForm;
-
-// const buildEditor = lazypipe()
-//   .pipe(gulpHtmlmin, {
-//     collapseWhitespace: true,
-//     minifyCSS: true
-//   })
-//   .pipe(() =>
-//     wrap(
-//       uiFormWrap,
-//       {},
-//       // { type: editorMap[type] },
-//       { variable: 'data' }
-//     )
-//   );
-// exports.buildEditor = buildEditor;
-
-// const buildHtml = lazypipe().pipe();
-
-// const gulp = require('gulp');
-
-const buildEditorFiles3 = () => {
+const buildEditorFiles = () => {
   return src('src/nodes/**/editor.html')
     .pipe(
       through2.obj(async (file, enc, cb) => {
@@ -135,17 +113,20 @@ const buildEditorFiles3 = () => {
         const editorJsPath = path.join(directory, 'editor.js');
         const editorHtmlPath = path.join(directory, 'editor.html');
         const helpHtmlPath = path.join(directory, 'help.html');
+        const cssPath = path.join(tmpFilePath, 'common.css');
 
         const editorJsContent = fs.readFileSync(editorJsPath, 'utf8');
         const editorHtmlContent = fs.readFileSync(editorHtmlPath, 'utf8');
         const helpHtmlContent = fs.readFileSync(helpHtmlPath, 'utf8');
+        const cssContent = fs.readFileSync(cssPath, 'utf8');
 
         const wrappedEditorJsContent = `<script type="text/javascript">\n${editorJsContent}\n</script>`;
         const wrappedEditorHtmlContent = `<script type="text/html" data-template-name="${type}">\n${editorHtmlContent}\n</script>`;
         const wrappedHelpHtmlContent = `<script type="text/html" data-help-name="${type}">\n${helpHtmlContent}\n</script>`;
+        const wrappedCssContent = `<style>${cssContent}</style>`;
 
-        const outputPath = path.join('dist/nodes', type, `${type}.html`);
-        const mergedContent = `${wrappedEditorHtmlContent}\n${wrappedEditorJsContent}\n${wrappedHelpHtmlContent}`;
+        const outputPath = path.join(destRootPath, 'src/nodes', type, `${type}.html`);
+        const mergedContent = `${wrappedEditorHtmlContent}\n${wrappedEditorJsContent}\n${wrappedHelpHtmlContent}\n${wrappedCssContent}`;
 
         // Ensure the output folder exists
         fs.ensureDirSync(path.dirname(outputPath));
@@ -159,123 +140,45 @@ const buildEditorFiles3 = () => {
       console.log('Merge completed.');
     });
 };
-exports.buildEditorFiles3 = buildEditorFiles3;
-
-const buildEditorFiles = () => {
-  const css = src(['src/editor/css/**/*.scss', 'src/nodes/**/*.scss', '!_*.scss']).pipe(buildSass());
-  css.pipe(rename('index.css')).pipe(dest(destRootPath));
-
-  if (false) {
-    let cache;
-    const js = rollupStream({
-      input: 'src/editor.ts',
-      cache,
-      output: {
-        dir: destRootPath,
-        format: 'iife'
-      },
-      plugins: [
-        rollupTypescript({
-          tsconfig: 'tsconfig.editor.json'
-        })
-      ],
-      external: []
-    })
-      .on('bundle', (bundle) => {
-        cache = bundle;
-      })
-      .pipe(source('editor.ts'))
-      .pipe(buffer())
-      .pipe(buildJs());
-  }
-
-  if (false) {
-    const editorsHtml = src(['src/editor/editors/*.html']).pipe(
-      flatmap((stream, file) => {
-        const [filename] = file.basename.split('.');
-
-        currentFilename = filename;
-        return stream.pipe(buildEditor());
-      })
-    );
-  }
-
-  return src(['src/nodes/**/editor.html']).pipe(
-    flatmap((stream, file) => {
-      const [filename, ext] = file.basename.split('.');
-
-      if (ext === 'html') {
-        const parts = file.path.match('[\\/]src[\\/]nodes[\\/]([^\\/]+)[\\/]editor.html');
-        // const parts = file.path.match('/src/nodes/([^/]+)/editor.html');
-        if (parts && parts.length > 1) {
-          currentFilename = parts[1];
-          const form = src([`${file.base}/${currentFilename}/editor.html`]).pipe(buildForm());
-          const help = src([`${file.base}/${currentFilename}/help.html`]).pipe(buildHelp());
-          const js = src([`${file.base}/${currentFilename}/editor.js`]).pipe(buildJs());
-          const destPath = path.resolve(destRootPath, 'nodes', currentFilename);
-          const destFilename = `${currentFilename}.html`;
-          console.log(`input: ${file.path},\noutput ${destPath}`);
-          // help.pipe(rename('help.html')).pipe(dest(destPath));
-          return merge(js, form, help, css).pipe(rename(destFilename)).pipe(dest(destPath));
-          // return (
-          //   stream
-          //     .pipe(buildForm())
-          //     .pipe(concat(help))
-          //     .pipe(merge(css))
-          //     // .pipe(header(resourceFiles.join('')))
-          //     .pipe(rename(destFilename))
-          //     .pipe(dest(destPath))
-          // );
-        } else {
-          console.log(`path does not match: ${file.path} ${JSON.stringify(parts)}`);
-        }
-      }
-
-      throw Error(`Expecting html extension: ${file.basename}`);
-    })
-  );
-  // done();
-  // return (
-  //   merge([css, html])
-  //     // .pipe(concat('index.html'))
-  //     .pipe(header(resourceFiles.join('')))
-  //     .pipe(dest(editorFilePath + '/'))
-  // );
-};
 exports.buildEditorFiles = buildEditorFiles;
 
 const buildSourceFiles = () => {
-  return tsProject.src().pipe(tsProject()).js.pipe(dest(destRootPath));
+  return tsProject
+    .src()
+    .pipe(tsProject())
+    .js.pipe(dest(path.join(destRootPath, 'src')));
 };
 exports.buildSourceFiles = buildSourceFiles;
 
 // Clean generated files
 const cleanAssetFiles = (done) => {
-  del.sync(['dist/icons']);
+  del.sync(['dist/src/**/*.svg']);
+  done();
+};
 
+const cleanCss = (done) => {
+  del.sync([tmpFilePath]);
   done();
 };
 
 const cleanSourceFiles = (done) => {
-  del.sync(['dist/helpers', 'dist/homeAssistant', 'dist/nodes', 'dist/*.js']);
-
+  const folders = ['helpers', 'homeAssistant', 'nodes', '*.js'].map((item) => {
+    return path.resolve(destRootPath, 'src', item);
+  });
+  del.sync(folders);
   done();
 };
+exports.cleanSourceFiles = cleanSourceFiles;
 
-const cleanEditorFiles = (done) => {
-  del.sync(['dist/index.html']);
-
-  done();
-};
-
-const cleanAllFiles = parallel(cleanAssetFiles, cleanSourceFiles, cleanEditorFiles);
+const cleanAllFiles = parallel(cleanAssetFiles, cleanSourceFiles, cleanCss);
 exports.cleanAllFiles = cleanAllFiles;
 
 const copyIcons = () => {
-  return src('src/icons/*').pipe(dest(`${destRootPath}/icons`));
+  return src('src/**/*.svg').pipe(dest(`${destRootPath}/src`));
 };
+exports.copyIcons = copyIcons;
 
 exports.copyAssetFiles = parallel(copyIcons);
 
-exports.buildAll = parallel(buildEditorFiles, buildSourceFiles, copyIcons);
+exports.buildAll = parallel(series(buildCss, buildEditorFiles), buildSourceFiles, copyIcons, cleanCss);
 // exports.buildAll = parallel(['buildEditorFiles', 'buildSourceFiles']); //, 'copyAssetFiles']);

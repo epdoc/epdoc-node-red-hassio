@@ -8,5 +8,8 @@
   "vs-code-prettier-eslint.prettierLast": false,
   "[html]": {
     "editor.defaultFormatter": "vscode.html-language-features"
+  },
+  "[css]": {
+    "editor.defaultFormatter": "vscode.css-language-features"
   } // set as "true" to run 'prettier' last not first
 }

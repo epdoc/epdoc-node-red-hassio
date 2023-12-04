@@ -4,7 +4,7 @@
     "module": "commonjs",
     "declaration": true,
     "sourceMap": true,
-    "outDir": "./dist",
+    "outDir": "./dist/src",
     "noEmit": false,
     "esModuleInterop": true,
     "resolveJsonModule": true,
@@ -38,7 +38,7 @@
     "out": "docs"
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["node_modules"],
+  "exclude": ["node_modules", "tmp/**/*.ts"],
   "x_compilerOptions": {
     "x_outFile": "./dist/index.ts",
     "x_emitDeclarationOnly": true

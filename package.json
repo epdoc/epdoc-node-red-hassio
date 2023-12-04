@@ -24,10 +24,10 @@
     "url": "git+https://github.com/jpravetz/epdoc-node-red-hassio.git"
   },
   "scripts": {
-    "clean": "rm -rf dist docs coverage && echo Done.",
-    "xbuild": "rm -rf dist && tsc && npm run copy",
-    "build": "gulp build",
-    "copy": "copyfiles './src/**/*.{css,html,svg}' './dist/'",
+    "clean": "rm -rf dist docs coverage tmpBuildFiles && echo Done.",
+    "x-build": "rm -rf dist && tsc && npm run copy",
+    "build": "gulp buildAll",
+    "x-copy": "copyfiles './src/**/*.{css,svg}' './dist/'",
     "format": "prettier --write 'src/**/*.ts' 'test/**/*.ts' '*.js' '*.json'",
     "docs": "./node_modules/typedoc/bin/typedoc",
     "test": "jest -t lower-case-node",
@@ -59,6 +59,7 @@
     "gulp-flatmap": "^1.0.2",
     "gulp-header": "^2.0.9",
     "gulp-htmlmin": "^5.0.1",
+    "gulp-merge": "^0.1.1",
     "gulp-merge-json": "^2.1.2",
     "gulp-postcss": "^9.0.1",
     "gulp-rename": "^2.0.0",
