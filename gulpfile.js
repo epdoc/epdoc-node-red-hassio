@@ -4,13 +4,10 @@ const ts = require('gulp-typescript');
 const tsProject = ts.createProject('tsconfig.json');
 
 // General
-const rename = require('gulp-rename');
-const concat = require('gulp-concat');
 const flatmap = require('gulp-flatmap');
 const lazypipe = require('lazypipe');
 const merge = require('merge-stream');
 const gulpMerge = require('gulp-merge');
-const mergeJson = require('gulp-merge-json');
 const wrap = require('gulp-wrap');
 const { src, dest, series, task, watch, parallel } = require('gulp');
 const through2 = require('through2');
@@ -25,13 +22,8 @@ const header = require('gulp-header');
 const buffer = require('gulp-buffer');
 const rollupStream = require('@rollup/stream');
 const rollupTypescript = require('@rollup/plugin-typescript');
-const source = require('vinyl-source-stream');
-
-// HTML
-const gulpHtmlmin = require('gulp-htmlmin');
 
 // Scripts
-const terser = require('gulp-terser');
 
 // Styles
 const minify = require('cssnano');
@@ -39,15 +31,6 @@ const postcss = require('gulp-postcss');
 const prefix = require('autoprefixer');
 const path = require('node:path/posix');
 const sass = require('gulp-sass')(require('node-sass'));
-
-// Markdown
-// const marked = require('marked');
-// Markdown-It
-// const cheerio = require('gulp-cheerio');
-// const markdownIt = require('gulp-markdownit');
-// const markdownitContainer = require('markdown-it-container');
-// const markdownitInlineComments = require('markdown-it-inline-comments');
-// const md = require('markdown-it')();
 
 // Constants
 const docsUrl = 'https://epdoc.github.io/epdoc-node-red-hassio';
@@ -57,12 +40,6 @@ const uiJsWrap = '<script type="text/javascript"><%= contents %></script>';
 const uiFormWrap = '<script type="text/html" data-template-name="<%= data.type %>"><%= data.contents %></script>';
 const uiHelpWrap = '<script type="text/html" data-help-name="<%= data.type %>"><%= data.contents %></script>';
 const tmpFilePath = 'tmpBuildFiles';
-const resourcePath = 'resources';
-const resourceFiles = [
-  `<script src="${resourcePath}/select2.full.min.js?v=4.1.0-rc.0"></script>`
-  // `<link rel="stylesheet" href="${resourcePath}/select2.min.css?v=4.1.0-rc.0">`,
-  // `<script src="${resourcePath}/maximize-select2-height.min.js?v=1.0.4"></script>`
-];
 
 const nodeMap = {
   'fan-control': { doc: 'fan-control', type: 'fan-control' },
