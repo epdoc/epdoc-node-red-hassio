@@ -42,11 +42,11 @@ const sass = require('gulp-sass')(require('node-sass'));
 // Markdown
 // const marked = require('marked');
 // Markdown-It
-const cheerio = require('gulp-cheerio');
-const markdownIt = require('gulp-markdownit');
-const markdownitContainer = require('markdown-it-container');
-const markdownitInlineComments = require('markdown-it-inline-comments');
-const md = require('markdown-it')();
+// const cheerio = require('gulp-cheerio');
+// const markdownIt = require('gulp-markdownit');
+// const markdownitContainer = require('markdown-it-container');
+// const markdownitInlineComments = require('markdown-it-inline-comments');
+// const md = require('markdown-it')();
 
 // Constants
 const docsUrl = 'https://epdoc.github.io/epdoc-node-red-hassio';
@@ -160,58 +160,6 @@ const buildEditorFiles3 = () => {
     });
 };
 exports.buildEditorFiles3 = buildEditorFiles3;
-
-// gulp.task('default', gulp.series('merge-files'));
-
-const buildEditorFiles2 = () => {
-  const css = src(['src/editor/css/**/*.scss', 'src/nodes/**/*.scss', '!_*.scss']).pipe(buildSass());
-  css.pipe(rename('index.css')).pipe(dest(destRootPath));
-  return src(['src/nodes/**/editor.html'])
-    .pipe(
-      flatmap((stream, file) => {
-        const parts = file.base.split('/');
-        console.log(`parts ${JSON.stringify(parts)}`);
-        const type = parts[parts.length - 1];
-
-        // const [(filename, ext)] = file.basename.split('.'));
-
-        // const parts = file.path.match('[\\/]src[\\/]nodes[\\/]([^\\/]+)[\\/]editor.html');
-        // const parts = file.path.match('/src/nodes/([^/]+)/editor.html');
-        const form = src([`${file.base}/${type}/editor.html`]).pipe(buildForm());
-        const help = src([`${file.base}/${type}/help.html`]).pipe(buildHelp());
-        const js = src([`${file.base}/${type}/editor.js`]).pipe(buildJs());
-        const destPath = path.resolve(destRootPath, 'nodes', type);
-        const destFilename = `${type}.html`;
-        console.log(`input: ${file.path},\noutput ${destPath}`);
-        // help.pipe(rename('help.html')).pipe(dest(destPath));
-        return merge(js, form, help, css);
-        // return (
-        //   stream
-        //     .pipe(buildForm())
-        //     .pipe(concat(help))
-        //     .pipe(merge(css))
-        //     // .pipe(header(resourceFiles.join('')))
-        //     .pipe(rename(destFilename))
-        //     .pipe(dest(destPath))
-        // );
-      })
-    )
-    .pipe(
-      rename((path) => {
-        const parts = file.base.split('/');
-        const type = parts[parts.length - 1];
-        path.dirname += '/' + type;
-        path.basename = type;
-        path.extname = '.html';
-      })
-    )
-    .pipe(
-      dest((file) => {
-        return file.base;
-      })
-    );
-};
-exports.buildEditorFiles2 = buildEditorFiles2;
 
 const buildEditorFiles = () => {
   const css = src(['src/editor/css/**/*.scss', 'src/nodes/**/*.scss', '!_*.scss']).pipe(buildSass());
