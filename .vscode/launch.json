@@ -5,6 +5,22 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "args": ["buildEditorFiles"],
+      "name": "Gulp buildEditorFiles",
+      "program": "${workspaceFolder}/node_modules/gulp/bin/gulp.js",
+      "request": "launch",
+      "skipFiles": ["<node_internals>/**"],
+      "type": "node"
+    },
+    {
+      "args": ["buildEditorFiles3"],
+      "name": "Gulp buildEditorFiles3",
+      "program": "${workspaceFolder}/node_modules/gulp/bin/gulp.js",
+      "request": "launch",
+      "skipFiles": ["<node_internals>/**"],
+      "type": "node"
+    },
+    {
       "type": "node",
       "request": "launch",
       "name": "Launch Program",
