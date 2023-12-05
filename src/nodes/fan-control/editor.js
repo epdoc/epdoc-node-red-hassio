@@ -26,7 +26,8 @@ RED.nodes.registerType('fan-control', {
     for: { value: '0' },
     forUnits: { value: 'minutes' }
   },
-  oneditprepare: function () {
+  oneditsave: () => {},
+  oneditprepare: () => {
     $('#node-input-fan').typedInput({
       type: 'fan',
       types: [
@@ -37,7 +38,7 @@ RED.nodes.registerType('fan-control', {
             { value: 'away_room', label: 'Away Room' },
             { value: 'living_room', label: 'Living Room' },
             { value: 'flintstone', label: 'Flintstone' },
-            { value: 'kitchen', label: 'Kitchen Fans 10110' },
+            { value: 'kitchen', label: 'Kitchen Fans' },
             { value: 'atrium', label: 'Atrium' },
             { value: 'pool_deck', label: 'Pool Deck' },
             { value: 'yoga_deck', label: 'Yoga Deck' },
@@ -69,10 +70,10 @@ RED.nodes.registerType('fan-control', {
       ]
     });
     $('#node-input-setspeed').typedInput({
-      type: 'instruction',
+      type: 'setspeed',
       types: [
         {
-          value: 'instruction',
+          value: 'setspeed',
           options: [
             { value: 'true', label: 'Set speed to' },
             { value: 'false', label: 'Leave speed as-is' }
@@ -80,10 +81,10 @@ RED.nodes.registerType('fan-control', {
         }
       ]
     });
-    // $("#node-input-setspeed").typedInput({
-    //   type:"setspeed",
-    //   types:["boolean"],
-    // })
+    // // $("#node-input-setspeed").typedInput({
+    // //   type:"setspeed",
+    // //   types:["boolean"],
+    // // })
     $('#node-input-speed').typedInput({
       type: 'speed',
       types: [
@@ -102,6 +103,25 @@ RED.nodes.registerType('fan-control', {
         'flow'
       ]
     });
+    $('#node-input-for').typedInput({
+      type: 'for',
+      types: ['num', 'msg', 'flow']
+    });
+    $('#node-input-forUnits').typedInput({
+      type: 'forUnits',
+      types: [
+        {
+          value: 'forUnits',
+          options: [
+            { value: 'milliseconds', label: 'Milliseconds' },
+            { value: 'seconds', label: 'Seconds' },
+            { value: 'minutes', label: 'Minutes' },
+            { value: 'hours', label: 'Hours' },
+            { value: 'days', label: 'Days' }
+          ]
+        }
+      ]
+    });
     $('#node-input-enabletimeout').typedInput({
       type: 'enabletimeout',
       types: [
@@ -112,16 +132,15 @@ RED.nodes.registerType('fan-control', {
             { value: 'false', label: 'leave fan on' }
           ]
         },
-        'boolean'
+        'bool'
       ]
     });
-    $('#node-input-timeout').typedInput({
-      type: 'timeout',
-      types: ['num']
-    });
-
-    $('.node-input-setspeed').on('change', function (event, type, value) {
-      $('.node-input-speed').typedInput(value === 'true' ? 'enable' : 'disable');
-    });
+    // $('#node-input-timeout').typedInput({
+    //   type: 'timeout',
+    //   types: ['num']
+    // });
+    // $('.node-input-setspeed').on('change', function (event, type, value) {
+    //   $('.node-input-speed').typedInput(value === 'true' ? 'enable' : 'disable');
+    // });
   }
 });
