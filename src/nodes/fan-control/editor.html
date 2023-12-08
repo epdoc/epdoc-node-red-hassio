@@ -9,10 +9,10 @@
 <div class="form-row">
   <div class="ha-multi-item-row">
     <label for="node-input-fan"><i class="icon-tag"></i> Turn</label>
-    <input type="text" id="node-input-fan">
+    <input type="text" id="node-input-fan" style="width: 35%">
     <input type="hidden" id="node-input-fan-type">
-    <label for="node-input-fan"><i class="icon-tag"></i> fan</label>
-    <input type="text" id="node-input-instruction">
+    <label for="node-input-fan" style="width: 6%"><i class="icon-tag"></i> fan</label>
+    <input type="text" id="node-input-instruction" style="width: 20%">
     <input type="hidden" id="node-input-instruction-type">
   </div>
 </div>
@@ -23,26 +23,25 @@
   <input type="hidden" id="node-input-instruction-type">
 </div> -->
 
-<div class="form-row">
+<div class="form-row node-wrapper-on">
   <div class="ha-multi-item-row">
-    <label for="node-input-setspeed">Speed</label>
+    <label for="node-input-setspeed">Then</label>
     <input type="text" id="node-input-setspeed" style="width: 30%">
     <input type="hidden" id="node-input-setspeed-type">
-    <label for="node-input-speed" style="width: 10%">to</label>
-    <input type="text" id="node-input-speed" style="width: 20%">
-    <input type="hidden" id="node-input-speed-type">
+    <input type="text" id="node-input-speed" style="width: 20%" class="node-wrapper-speed">
+    <input type="hidden" id="node-input-speed-type" class="node-wrapper-speed">
   </div>
 </div>
 
-<div class="form-row">
+<div class="form-row node-wrapper-on node-wrapper-speed">
   <div class="ha-multi-item-row">
     <label>Then</label>
     <input type="text" id="node-input-enabletimeout" style="width: 25%" />
     <input type="hidden" id="node-input-enabletimeout-type" />
     <input type="text" id="node-input-for" style="width: 20%" />
-    <input type="text" id="node-input-for-type" />
+    <!-- <input type="text" id="node-input-for-type" /> -->
     <input type="text" id="node-input-forUnits" style="width: 20%" />
-    <input type="text" id="node-input-forUnits-type" />
+    <!-- <input type="text" id="node-input-forUnits-type" /> -->
   </div>
 </div>
 

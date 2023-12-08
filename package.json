@@ -76,7 +76,7 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "epdoc-node-red-hautil": "^1.0.3",
+    "epdoc-node-red-hautil": "^1.0.4",
     "epdoc-timeutil": "^2.3.6",
     "epdoc-util": "^0.5.1",
     "node-red-contrib-home-assistant-websocket": "^0.59.0"

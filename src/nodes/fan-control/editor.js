@@ -9,10 +9,13 @@ RED.nodes.registerType('fan-control', {
   paletteLabel: 'Fan Control',
   label: function () {
     let sEnd = '';
+    if (this.setspeed === 'true') {
+      sEnd += `, speed ${this.speed}`;
+    }
     if (this.for > 0) {
       sEnd = ` for ${this.for} ${this.forUnits})`;
     }
-    return this.name || `Set ${this.fan} ${this.instruction}${sEnd}`;
+    return this.name || `Turn ${this.fan} ${this.instruction === 'turn_on' ? 'on' : 'off'}${sEnd}`;
   },
   labelStyle: 'node_label_italic',
   defaults: {
@@ -26,7 +29,15 @@ RED.nodes.registerType('fan-control', {
     for: { value: '0' },
     forUnits: { value: 'minutes' }
   },
-  oneditsave: () => {},
+  oneditsave: () => {
+    this.name = $('#node-input-name').typedInput('value');
+    this.fan = $('#node-input-fan').typedInput('value');
+    this.instruction = $('#node-input-instruction').typedInput('value');
+    this.setspeed = $('#node-input-setspeed').typedInput('value');
+    this.for = $('#node-input-for').typedInput('value');
+    this.forUnits = $('#node-input-forUnits').typedInput('value');
+    this.debugEnabled = $('#node-input-debugEnabled').typedInput('value');
+  },
   oneditprepare: () => {
     $('#node-input-fan').typedInput({
       type: 'fan',
@@ -81,10 +92,6 @@ RED.nodes.registerType('fan-control', {
         }
       ]
     });
-    // // $("#node-input-setspeed").typedInput({
-    // //   type:"setspeed",
-    // //   types:["boolean"],
-    // // })
     $('#node-input-speed').typedInput({
       type: 'speed',
       types: [
@@ -131,16 +138,32 @@ RED.nodes.registerType('fan-control', {
             { value: 'true', label: 'turn fan off after' },
             { value: 'false', label: 'leave fan on' }
           ]
-        },
-        'bool'
+        }
       ]
     });
-    // $('#node-input-timeout').typedInput({
-    //   type: 'timeout',
-    //   types: ['num']
-    // });
-    // $('.node-input-setspeed').on('change', function (event, type, value) {
-    //   $('.node-input-speed').typedInput(value === 'true' ? 'enable' : 'disable');
-    // });
+    $('#node-input-instruction').on('change', (event, type, value) => {
+      // this.label();
+      if (value === 'turn_on') {
+        $('.node-wrapper-on').show();
+      } else if (value === 'turn_off') {
+        $('.node-wrapper-on').hide();
+      }
+    });
+    $('#node-input-setspeed').on('change', (event, type, value) => {
+      // this.label();
+      if (value === 'true') {
+        $('.node-wrapper-speed').show();
+      } else if (value === 'false') {
+        $('.node-wrapper-speed').hide();
+      }
+    });
+    $('#node-input-enabletimeout').on('change', (event, type, value) => {
+      // this.label();
+      if (value === 'true') {
+        $('.node-wrapper-timeout').show();
+      } else if (value === 'false') {
+        $('.node-wrapper-timeout').hide();
+      }
+    });
   }
 });

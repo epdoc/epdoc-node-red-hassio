@@ -1,5 +1,5 @@
 import { Node, NodeAPI, NodeDef, NodeMessage } from 'node-red';
-import { setRED } from '../../globals';
+import { setRED } from '../globals';
 
 module.exports = function (RED: NodeAPI) {
   setRED(RED);
