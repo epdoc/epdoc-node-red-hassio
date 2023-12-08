@@ -14,7 +14,7 @@ const REG = {
  * Container for Fan Control parameters
  */
 export class FanControlParams {
-  public enableDebug = false;
+  public debugEnabled = false;
   public shortId: EntityShortId;
   public speed: FanSpeed6Speed = 0;
   public service: FanControlInstruction.TurnOn | FanControlInstruction.TurnOff = FanControlInstruction.TurnOff;
@@ -27,7 +27,7 @@ export class FanControlParams {
 
   setDebug(val: any): this {
     if (val === true) {
-      this.enableDebug = true;
+      this.debugEnabled = true;
     }
     return this;
   }

@@ -1,7 +1,7 @@
 import { EntityId, EntityShortId } from 'epdoc-node-red-hautil';
 import { Milliseconds } from 'epdoc-timeutil';
-import { Integer, asInt, isNonEmptyString } from 'epdoc-util';
-import { NodeDef } from 'node-red';
+import { Dict, Integer, asInt, isNonEmptyString, pick } from 'epdoc-util';
+import { BaseNodeConfig } from 'nodes/types';
 
 export type NumberAsString = string;
 
@@ -34,18 +34,21 @@ export function fanControlInstructionMap(inst: FanControlInstruction) {
   return result;
 }
 
-export interface FanControlDef extends NodeDef {
+export interface FanControlNodeConfig extends BaseNodeConfig {
   fan: EntityShortId;
   enitityId: EntityId;
   instruction: FanControlInstruction;
   for: NumberAsString;
   forUnits: TimeUnit;
   retryDelay: Milliseconds[];
-  enableDebug: boolean;
 }
 
-export function isFanControlDef(val: any): val is FanControlDef {
+export function isFanControlNodeConfig(val: any): val is FanControlNodeConfig {
   return val && isNonEmptyString(val.fan);
+}
+export const FanControlNodeConfigKeys = ['fan', 'instruction', 'for', 'forUnits', 'retryDelay', 'debugEnabled'];
+export function toFanControlNodeConfig(dict: Dict): FanControlNodeConfig {
+  return pick(dict, FanControlNodeConfigKeys) as FanControlNodeConfig;
 }
 
 // export interface FanNodeDef extends NodeDef, FanControlDef {}

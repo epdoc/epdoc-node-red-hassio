@@ -4,16 +4,15 @@ import NodeRedContextService from '../context-service';
 import { RED } from '../globals';
 import { createControllerDependencies } from '../helpers';
 import TypedInputService from '../typed-input-service';
-import { BaseNode, NodeProperties } from '../types';
+import { BaseNode } from '../types';
 import { FanController, FanControllerConstructor } from './fan-controller';
-
-export interface FanControlNodeProperties extends NodeProperties {}
+import { FanControlNodeConfig } from './types';
 
 export interface FanControlNode extends BaseNode {
-  config: FanControlNodeProperties;
+  config: FanControlNodeConfig;
 }
 
-export function fanControlNode(this: FanControlNode, config: FanControlNodeProperties) {
+export function fanControlNode(this: FanControlNode, config: FanControlNodeConfig) {
   console.log(`Starting fan-control with config: ${JSON.stringify(config)}`);
   // console.log(`Starting fan-control with opts: ${JSON.stringify(Object.keys(opts))} config: ${JSON.stringify(config)}`);
   // @ts-ignore
@@ -33,22 +32,27 @@ export function fanControlNode(this: FanControlNode, config: FanControlNodePrope
 
   const contextService = new NodeRedContextService(this);
   const params: FanControllerConstructor = {
-    node: this,
+    node: node,
     contextService: contextService,
     typedInputService: new TypedInputService({
       nodeConfig: node.config,
       context: contextService
     })
   };
-  const controller = new FanController(params);
 
   const nodeContext = node.context();
   const flowContext = node.context().flow;
   const globalContext = node.context().global;
+  node.log(`context keys = ${JSON.stringify(nodeContext.keys())}`);
+  node.log(`flow keys = ${JSON.stringify(flowContext.keys())}`);
+  node.log(`global keys = ${JSON.stringify(globalContext.keys())}`);
+
+  const controller = new FanController(params);
 
   const processMsg = async (msg: NodeMessage, send: NodeSend, done: NodeDone) => {
     try {
       node.log(`Processing fan-control message: ${msg.payload}`);
+      node.log(`config: ${JSON.stringify(config)}`);
       // msg.payload = 'Processed fan-control message';
       // fanCtrl.setMessage(msg, send, done);
       send(msg);
