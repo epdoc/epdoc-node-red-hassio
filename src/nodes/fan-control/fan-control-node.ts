@@ -51,8 +51,10 @@ export function fanControlNode(this: FanControlNode, config: FanControlNodeConfi
 
   const processMsg = async (msg: NodeMessage, send: NodeSend, done: NodeDone) => {
     try {
-      node.log(`Processing fan-control message: ${msg.payload}`);
-      node.log(`config: ${JSON.stringify(config)}`);
+      controller.testRun(msg, send, done);
+      // node.log(`Processing fan-control message: ${msg.payload}`);
+
+      // node.log(`config: ${JSON.stringify(config)}`);
       // msg.payload = 'Processed fan-control message';
       // fanCtrl.setMessage(msg, send, done);
       send(msg);

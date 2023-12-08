@@ -144,21 +144,27 @@ export class FanController {
   initBeforeRun(): this {
     if (this.opts.debugEnabled) {
       this.log.debug = this.node.warn;
+      this._node.log('debugEnabled = true');
     }
-    this._ha = new HA(this.global);
-    if (isNonEmptyString(this.opts.shortId)) {
-      const fanId: EntityId = 'fan.' + this.opts.shortId;
-      const switchId: EntityId = fanId;
-      this._fan = this._ha.entity(fanId);
-      this._switch = this._ha.entity(switchId);
-    }
-    if (isNonEmptyString(this.opts.shutoffEntityId)) {
-      let entity: Entity = this._ha.entity(this.opts.shutoffEntityId);
-      if (entity.isValid() && entity.isOn()) {
-        this._shutoff = true;
-      } else {
-        this.node.error(`Entity ${this.opts.shutoffEntityId} not found`);
+    if (this._node.context().global) {
+      this._ha = new HA(this._node.context().global);
+      if (isNonEmptyString(this.opts.shortId)) {
+        const fanId: EntityId = 'fan.' + this.opts.shortId;
+        const switchId: EntityId = fanId;
+        this._fan = this._ha.entity(fanId);
+        this._switch = this._ha.entity(switchId);
+        console.log(`${fanId} is ${this._fan.isOn() ? 'on' : 'off'}`);
       }
+      if (isNonEmptyString(this.opts.shutoffEntityId)) {
+        let entity: Entity = this._ha.entity(this.opts.shutoffEntityId);
+        if (entity.isValid() && entity.isOn()) {
+          this._shutoff = true;
+        } else {
+          this.node.error(`Entity ${this.opts.shutoffEntityId} not found`);
+        }
+      }
+    } else {
+      this.node.error(`No homeassistant instance found found`);
     }
     return this;
   }
@@ -184,6 +190,23 @@ export class FanController {
 
   get switchId(): EntityId {
     return this._switch.entityId || 'undefined';
+  }
+
+  logContext(): this {
+    const nodeContext = this._node.context();
+    const flowContext = this._node.context().flow;
+    const globalContext = this._node.context().global;
+    this._node.log(`node keys = ${JSON.stringify(Object.keys(this._node))}`);
+    this._node.log(`context keys = ${JSON.stringify(nodeContext.keys())}`);
+    this._node.log(`flow keys = ${JSON.stringify(flowContext.keys())}`);
+    this._node.log(`global keys = ${JSON.stringify(globalContext.keys())}`);
+    return this;
+  }
+
+  testRun(msg: NodeMessage, send: NodeSend, done: NodeDone) {
+    this.logContext();
+    this._node.log(`fan-control payload: ${msg.payload}`);
+    this.initBeforeRun();
   }
 
   /**
