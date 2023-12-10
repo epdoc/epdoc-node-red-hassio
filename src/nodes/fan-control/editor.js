@@ -1,3 +1,20 @@
+const FANS = {
+  master_bedroom: 'Master Bedroom',
+  away_room: 'Away Room',
+  living_room: 'Living Room',
+  flintstone: 'Flintstone',
+  kitchen: 'Kitchen Fans',
+  atrium: 'Atrium',
+  pool_deck: 'Pool Deck',
+  yoga_deck: 'Yoga Deck',
+  jack_bedroom: 'Jack Bedroom',
+  jill_bedroom: 'Jill Bedroom',
+  jack_patio: 'Jack Patio',
+  jill_patio: 'Jill Deck',
+  apartment_bedroom: 'Apartment Bedroom',
+  apartment_kitchen: 'Apartment Kitchen',
+  granny_patio: 'Apartment Deck'
+};
 RED.nodes.registerType('fan-control', {
   category: 'function', //'home_assistant',
   color: '#a6bbcf',
@@ -8,27 +25,33 @@ RED.nodes.registerType('fan-control', {
   icon: 'fan.svg',
   paletteLabel: 'Fan Control',
   label: function () {
-    let sEnd = '';
-    if (this.setspeed === 'true') {
-      sEnd += `, speed ${this.speed}`;
+    let s = '';
+    const f = FANS[this.fan];
+    if (this.instruction === 'turn_off') {
+      s = `Turn ${f} Off`;
+    } else if (this.setSpeed === 'true') {
+      s = `Set ${f} speed to ${this.speed}`;
+    } else if (this.instruction === 'turn_on') {
+      s = `Turn ${f} On`;
     }
     if (this.for > 0) {
-      sEnd = ` for ${this.for} ${this.forUnits})`;
+      s += ` for ${this.for} ${this.forUnits})`;
     }
-    return this.name || `Turn ${this.fan} ${this.instruction === 'turn_on' ? 'on' : 'off'}${sEnd}`;
+    return this.name || s;
   },
   labelStyle: 'node_label_italic',
   defaults: {
     name: { value: '' },
-    server: { value: '', required: true },
+    server: { value: 'Home Assistant' },
     fan: { value: '' },
-    entityId: { value: '' },
+    // entityId: { value: '' },
     instruction: { value: 'turn_on' },
-    setspeed: { value: false },
+    setSpeed: { value: false },
     speed: { value: 2 },
-    debugEnabled: { value: false },
+    timeoutEnabled: { value: false },
     for: { value: '0' },
-    forUnits: { value: 'minutes' }
+    forUnits: { value: 'minutes' },
+    debugEnabled: { value: false }
   },
   // oneditsave: () => {
   //   this.name = $('#node-input-name').typedInput('value');
@@ -41,31 +64,17 @@ RED.nodes.registerType('fan-control', {
   //   this.debugEnabled = $('#node-input-debugEnabled').typedInput('value');
   // },
   oneditprepare: () => {
+    const fanOpts = Object.keys(FANS).map((key) => {
+      return { value: key, label: FANS[key] };
+    });
     $('#node-input-fan').typedInput({
       type: 'fan',
       types: [
         {
           value: 'fan',
-          options: [
-            { value: 'master_bedroom', label: 'Master Bedroom' },
-            { value: 'away_room', label: 'Away Room' },
-            { value: 'living_room', label: 'Living Room' },
-            { value: 'flintstone', label: 'Flintstone' },
-            { value: 'kitchen', label: 'Kitchen Fans' },
-            { value: 'atrium', label: 'Atrium' },
-            { value: 'pool_deck', label: 'Pool Deck' },
-            { value: 'yoga_deck', label: 'Yoga Deck' },
-            { value: 'jack_bedroom', label: 'Jack Bedroom' },
-            { value: 'jill_bedroom', label: 'Jill Bedroom' },
-            { value: 'jack_patio', label: 'Jack Patio' },
-            { value: 'jill_patio', label: 'Jill Deck' },
-            { value: 'apartment_bedroom', label: 'Apartment Bedroom' },
-            { value: 'apartment_kitchen', label: 'Apartment Kitchen' },
-            { value: 'granny_patio', label: 'Apartment Deck' }
-          ]
+          options: fanOpts
         },
-        'msg',
-        'flow'
+        'msg'
       ]
     });
     $('#node-input-instruction').typedInput({
@@ -78,8 +87,7 @@ RED.nodes.registerType('fan-control', {
             { value: 'turn_off', label: 'Off' }
           ]
         },
-        'msg',
-        'flow'
+        'msg'
       ]
     });
     $('#node-input-setspeed').typedInput({
@@ -108,8 +116,7 @@ RED.nodes.registerType('fan-control', {
             { value: '6', label: '6' }
           ]
         },
-        'msg',
-        'flow'
+        'msg'
       ]
     });
     $('#node-input-for').typedInput({
@@ -131,11 +138,11 @@ RED.nodes.registerType('fan-control', {
         }
       ]
     });
-    $('#node-input-enabletimeout').typedInput({
-      type: 'enabletimeout',
+    $('#node-input-timeoutEnabled').typedInput({
+      type: 'timeoutEnabled',
       types: [
         {
-          value: 'enabletimeout',
+          value: 'timeoutEnabled',
           options: [
             { value: 'true', label: 'turn fan off after' },
             { value: 'false', label: 'leave fan on' }
@@ -159,7 +166,7 @@ RED.nodes.registerType('fan-control', {
         $('.node-wrapper-speed').hide();
       }
     });
-    $('#node-input-enabletimeout').on('change', (event, type, value) => {
+    $('#node-input-timeoutEnabled').on('change', (event, type, value) => {
       // this.label();
       if (value === 'true') {
         $('.node-wrapper-timeout').show();

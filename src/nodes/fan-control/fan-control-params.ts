@@ -1,6 +1,15 @@
 import { EntityId, EntityShortId, FanSpeed6Service, FanSpeed6Speed, isFanSpeed6Speed } from 'epdoc-node-red-hautil';
 import { Milliseconds } from 'epdoc-timeutil';
-import { Integer, asInt, isDefined, isNonEmptyArray, isNonEmptyString, isNumber, isString } from 'epdoc-util';
+import {
+  Integer,
+  asInt,
+  isDefined,
+  isNonEmptyArray,
+  isNonEmptyString,
+  isNumber,
+  isPosInteger,
+  isString
+} from 'epdoc-util';
 import { FanControlInstruction, NumberAsString, TimeUnit } from './types';
 
 const REG = {
@@ -37,6 +46,8 @@ export class FanControlParams {
   setDebug(val: any): this {
     if (val === true) {
       this.debugEnabled = true;
+    } else if (val === false) {
+      this.debugEnabled = false;
     }
     return this;
   }
@@ -62,12 +73,14 @@ export class FanControlParams {
     return this;
   }
 
-  setSpeed(speed: FanSpeed6Speed | undefined): this {
-    if (isFanSpeed6Speed(speed)) {
+  setSpeed(enable: boolean, speed: FanSpeed6Speed | undefined): this {
+    if (enable && isFanSpeed6Speed(speed)) {
       this.speed = speed;
       if (this.speed === 0) {
         return this.off();
       }
+    } else if (enable === false) {
+      this.speed = 0;
     }
     return this;
   }
@@ -95,13 +108,17 @@ export class FanControlParams {
       this.service = inst;
     } else if (REG.speed.test(inst)) {
       this.service = FanControlInstruction.TurnOn;
-      this.setSpeed(asInt(inst));
+      this.setSpeed(true, asInt(inst));
     }
     return this;
   }
 
-  setTimeout(val: NumberAsString | Integer | undefined, units: TimeUnit = TimeUnit.Milliseconds): this {
-    if (isDefined(val)) {
+  setTimeout(
+    enable: boolean,
+    val: NumberAsString | Integer | undefined,
+    units: TimeUnit = TimeUnit.Milliseconds
+  ): this {
+    if (enable && isDefined(val)) {
       const t = asInt(val);
       if (units === TimeUnit.Milliseconds) {
         this.timeout = t;
@@ -114,6 +131,8 @@ export class FanControlParams {
       } else if (units === TimeUnit.Days) {
         this.timeout = t * 24 * 3600 * 1000;
       }
+    } else if (enable === false) {
+      this.timeout = 0;
     }
     return this;
   }
@@ -130,14 +149,33 @@ export class FanControlParams {
     return this;
   }
 
+  shouldSetSpeed(): boolean {
+    return isPosInteger(this.speed);
+  }
+
   shouldTurnOff(): boolean {
-    return this.bOn !== true || this.speed === 0;
+    return this.bOn !== true; //|| this.speed === 0;
   }
   shouldTurnOn(): boolean {
-    return this.bOn === true || this.speed > 0;
+    return this.bOn === true; //|| this.speed > 0;
   }
 
   shouldTimeout(): boolean {
     return this.shouldTurnOn() && this.timeout > 0;
+  }
+
+  toString() {
+    let s = '';
+    if (this.service === 'turn_off') {
+      s = `Turn ${this.shortId} Off`;
+    } else if (this.speed > 0) {
+      s = `Set ${this.shortId} speed to ${this.speed}`;
+    } else if (this.service === 'turn_on') {
+      s = `Turn ${this.shortId} On`;
+    }
+    if (this.timeout > 0) {
+      s += ` for ${this.timeout} ms`;
+    }
+    return s;
   }
 }

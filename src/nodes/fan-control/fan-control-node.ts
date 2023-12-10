@@ -6,14 +6,14 @@ import { createControllerDependencies } from '../helpers';
 import TypedInputService from '../typed-input-service';
 import { BaseNode } from '../types';
 import { FanController, FanControllerConstructor } from './fan-controller';
-import { FanControlNodeConfig } from './types';
+import { FanControlNodeConfig, toFanControlNodeConfig } from './types';
 
 export interface FanControlNode extends BaseNode {
   config: FanControlNodeConfig;
 }
 
 export function fanControlNode(this: FanControlNode, config: FanControlNodeConfig) {
-  console.log(`Starting fan-control with config: ${JSON.stringify(config)}`);
+  // console.log(`Starting fan-control with config: ${JSON.stringify(config)}`);
   // console.log(`Starting fan-control with opts: ${JSON.stringify(Object.keys(opts))} config: ${JSON.stringify(config)}`);
   // @ts-ignore
   RED.nodes.createNode(this, config);
@@ -21,9 +21,7 @@ export function fanControlNode(this: FanControlNode, config: FanControlNodeConfi
   // @ts-ignore
   let node: FanControlNode = this as FanControlNode;
 
-  node.log(`Starting fan-control with config: ${JSON.stringify(config)}`);
-
-  // const exposeAsConfigNode = false; // getExposeAsConfigNode(this.config.exposeAsEntityConfig);
+  node.log(`fan-control config: ${JSON.stringify(toFanControlNodeConfig(config))}`);
 
   // const status = new Status({ node: node });
 
@@ -51,7 +49,6 @@ export function fanControlNode(this: FanControlNode, config: FanControlNodeConfi
 
   const processMsg = async (msg: NodeMessage, send: NodeSend, done: NodeDone) => {
     try {
-      controller.testRun(msg, send, done);
       controller.run(msg, send, done);
       // node.log(`Processing fan-control message: ${msg.payload}`);
 
