@@ -7,8 +7,7 @@ export interface NodeProperties extends NodeDef {
 }
 
 export interface BaseNodeConfig extends NodeProperties {
-  version: number;
-  debugEnabled?: boolean;
+  server?: string;
   // outputs?: number;
 }
 

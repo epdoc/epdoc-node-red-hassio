@@ -1,6 +1,6 @@
-import { RED } from './globals';
 import { NodeMessage } from 'node-red';
 import { PRINT_TO_DEBUG_TOPIC, TypedInputTypes } from './const';
+import { RED } from './globals';
 import { BaseNode } from './types';
 
 export enum ContextLocation {

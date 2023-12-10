@@ -1,4 +1,4 @@
-import { ContextKey, FunctionNodeBase, NodeRedContextApi, NodeRedGlobalApi } from 'epdoc-node-red-hautil';
+import { ContextKey, FunctionNodeBase, NodeContextGlobalData, NodeRedContextApi } from 'epdoc-node-red-hautil';
 import { EpochMilliseconds } from 'epdoc-timeutil';
 import { Dict, isArray } from 'epdoc-util';
 import { HistoryFilter } from './history-filter';
@@ -25,7 +25,7 @@ export class LocationHistory extends FunctionNodeBase {
   private context: StorageContext = 'flow';
   private type: StorageContextType = 'memory';
 
-  constructor(global: NodeRedGlobalApi, contextApi: NodeRedContextApi, opts?: LocationHistoryOpts) {
+  constructor(global: NodeContextGlobalData, contextApi: NodeRedContextApi, opts?: LocationHistoryOpts) {
     super(global, contextApi);
     if (opts && opts.context) {
       this.context = opts.context;

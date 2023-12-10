@@ -35,17 +35,18 @@ export type FanListItem = {
 };
 
 export type PayloadSendFunction = (payload: ServicePayload) => void | Promise<void>;
-export type FanRunParams = {
+export type FanControlPayload = {
   fan: EntityShortId;
+  server: string;
   speed?: FanSpeed6Speed;
   percentage?: number;
   service?: EntityService | EntityShortService;
   timeout?: Milliseconds;
   shutOffEntityId?: EntityId;
   delay?: Milliseconds[];
-  debug?: boolean;
+  debugEnabled?: boolean;
 };
-export function isFanRunParams(val: any): val is FanRunParams {
+export function isFanControlPayload(val: any): val is FanControlPayload {
   return isDict(val) && isNonEmptyString(val.fan);
 }
 type FanControlLogFunctions = {
@@ -65,8 +66,6 @@ export class FanController {
   private _nodeDone: NodeDone;
   protected _ha: HA;
   private _shutoff: boolean = false;
-  protected _fan: Entity;
-  protected _switch: Entity;
 
   constructor(params: FanControllerConstructor) {
     this._node = params.node;
@@ -74,12 +73,10 @@ export class FanController {
     const nodeContext = this._node.context();
     const flowContext = this._node.context().flow;
     const globalContext = this._node.context().global;
-    this._node.log(`context keys = ${JSON.stringify(nodeContext.keys())}`);
-    this._node.log(`flow keys = ${JSON.stringify(flowContext.keys())}`);
-    this._node.log(`global keys = ${JSON.stringify(globalContext.keys())}`);
+    this._node.log(`constructor: context keys = ${JSON.stringify(nodeContext.keys())}`);
+    this._node.log(`constructor: flow keys = ${JSON.stringify(flowContext.keys())}`);
+    this._node.log(`constructor: global keys = ${JSON.stringify(globalContext.keys())}`);
 
-    const global = this._node.context().global;
-    this._node.log(`global keys = ${JSON.stringify(global.keys())}`);
     this.setFanControlConfig(params.node.config);
   }
 
@@ -108,6 +105,7 @@ export class FanController {
   setFanControlConfig(config?: FanControlNodeConfig): this {
     if (isFanControlNodeConfig(config)) {
       this.opts
+        .setServer(config.server)
         .setDebug(config.debugEnabled)
         .setFan(config.fan)
         .setInstruction(config.instruction)
@@ -119,9 +117,10 @@ export class FanController {
   }
 
   setPayloadConfig(params?: any): this {
-    if (isFanRunParams(params)) {
+    if (isFanControlPayload(params)) {
       this.opts
-        .setDebug(params.debug)
+        .setServer(params.server)
+        .setDebug(params.debugEnabled)
         .setFan(params.fan)
         .setShutoff(params.shutOffEntityId)
         .setSpeed(params.speed)
@@ -147,32 +146,33 @@ export class FanController {
       this._node.log('debugEnabled = true');
     }
     if (this._node.context().global) {
-      this._ha = new HA(this._node.context().global);
-      if (isNonEmptyString(this.opts.shortId)) {
-        const fanId: EntityId = 'fan.' + this.opts.shortId;
-        const switchId: EntityId = fanId;
-        this._fan = this._ha.entity(fanId);
-        this._switch = this._ha.entity(switchId);
-        console.log(`${fanId} is ${this._fan.isOn() ? 'on' : 'off'}`);
-      }
-      if (isNonEmptyString(this.opts.shutoffEntityId)) {
-        let entity: Entity = this._ha.entity(this.opts.shutoffEntityId);
-        if (entity.isValid() && entity.isOn()) {
-          this._shutoff = true;
+      this._ha = new HA(this._node.context().global, this.opts.server);
+      if (this._ha) {
+        if (this.isValid()) {
+          if (isNonEmptyString(this.opts.shutoffEntityId)) {
+            let entity: Entity = this._ha.entity(this.opts.shutoffEntityId);
+            if (entity.isValid() && entity.isOn()) {
+              this._shutoff = true;
+            } else {
+              this.node.error(`Entity ${this.opts.shutoffEntityId} not found`);
+            }
+          }
         } else {
-          this.node.error(`Entity ${this.opts.shutoffEntityId} not found`);
+          this.node.error(`Fan entities not found for ${this.opts.shortId}`);
         }
+      } else {
+        this.node.error(
+          `No homeassistant instance found. Make sure to 'Enable global context store' when you configure your Home Assistant server.`
+        );
       }
-    } else {
-      this.node.error(`No homeassistant instance found found`);
     }
     return this;
   }
 
-  serviceSend(payload: any) {
-    // @ts-ignore
-    this._nodeSend([null, { payload: payload }]);
-  }
+  // serviceSend(payload: any) {
+  //   // @ts-ignore
+  //   this._nodeSend([null, { payload: payload }]);
+  // }
 
   done() {
     // @ts-ignore
@@ -181,30 +181,39 @@ export class FanController {
   }
 
   isValid(): boolean {
-    return Entity.isEntity(this._fan) && Entity.isEntity(this._switch);
+    return Entity.isEntity(this.fan()) && Entity.isEntity(this.switch());
+  }
+
+  fan(): Entity {
+    return this._ha.entity('fan.' + this.opts.shortId);
   }
 
   get fanId(): EntityId {
-    return this._fan.entityId || 'undefined';
+    return this.fan().entityId || 'undefined';
+  }
+
+  switch(): Entity {
+    return this._ha.entity('fan.' + this.opts.shortId);
   }
 
   get switchId(): EntityId {
-    return this._switch.entityId || 'undefined';
+    return this.switch().entityId || 'undefined';
   }
 
   logContext(): this {
     const nodeContext = this._node.context();
     const flowContext = this._node.context().flow;
     const globalContext = this._node.context().global;
-    this._node.log(`node keys = ${JSON.stringify(Object.keys(this._node))}`);
-    this._node.log(`context keys = ${JSON.stringify(nodeContext.keys())}`);
-    this._node.log(`flow keys = ${JSON.stringify(flowContext.keys())}`);
-    this._node.log(`global keys = ${JSON.stringify(globalContext.keys())}`);
+    this._node.log(`logContext: node keys = ${JSON.stringify(Object.keys(this._node))}`);
+    // this._node.log(`node._context keys = ${JSON.stringify(Object.keys(this._node._context))}`);
+    this._node.log(`logContext: context keys = ${JSON.stringify(nodeContext.keys())}`);
+    this._node.log(`logContext: flow keys = ${JSON.stringify(flowContext.keys())}`);
+    this._node.log(`logContext: global keys = ${JSON.stringify(globalContext.keys())}`);
     return this;
   }
 
   testRun(msg: NodeMessage, send: NodeSend, done: NodeDone) {
-    this.logContext();
+    // this.logContext();
     this._node.log(`fan-control payload: ${msg.payload}`);
     this.initBeforeRun();
   }
@@ -217,89 +226,86 @@ export class FanController {
    * is a lightning storm and you wish to keep the fan switched off at it's
    * switch.
    */
-  run(params?: FanRunParams): Promise<void> {
-    this.setPayloadConfig(params);
+  async run(msg: NodeMessage, send: NodeSend, done: NodeDone): Promise<void> {
+    this.setPayloadConfig(msg.payload);
     this.initBeforeRun();
-    if (this.isValid()) {
-      let bTurnedOn = false;
+    let bTurnedOn = false;
 
-      return Promise.resolve()
-        .then((resp) => {
-          this.log.debug(`${this.switchId} is ${this._switch.state()}`);
-          this.log.debug(`Shutoff (lightning) is ${this._shutoff}`);
-          if (this._switch.isOn() && (this._shutoff || this.opts.shouldTurnOff())) {
-            this.log.debug(`Turn off ${this.fanId}`);
-            let payload: ServicePayload = newFanSpeed6Service(this.opts.shortId).off().payload();
-            this.serviceSend(payload);
-            this._node.status({ fill: 'green', shape: 'ring', text: `Turn off ${this.fanId}` });
-          } else {
-            this.log.debug(`Fan ${this.fanId} is ${this._switch.state()}, no need to turn off`);
-          }
-          if (!this._switch.isOn() && !this._shutoff && this.opts.shouldTurnOn()) {
-            this.log.debug(`Turn on ${this.switchId} because fan was off`);
-            let payload = newSwitchService(this.switchId).on().payload();
-            this.serviceSend(payload);
-            bTurnedOn = true;
-            this._node.status({ fill: 'green', shape: 'dot', text: `Turned on ${this.fanId}` });
-          } else {
-            this.log.debug(`Fan ${this.fanId} is already on`);
-          }
-          if (!this._shutoff && this.opts.speed > 0 && bTurnedOn) {
-            this.log.debug(`1st delay of ${this.opts.retryDelay[0]} for ${this.switchId}`);
-            return delayPromise(this.opts.retryDelay[0]);
-          } else {
-            return Promise.resolve();
-          }
-        })
-        .then(() => {
-          if (!this._shutoff && this.opts.speed > 0) {
-            this.log.debug(`1st set fan speed to ${this.opts.speed} for ${this.fanId}`);
-            let payload = newFanSpeed6Service(this.opts.shortId).speed(this.opts.speed).payload();
-            this.serviceSend(payload);
-            this.log.debug(`2nd delay of ${this.opts.retryDelay[1]} for ${this.switchId}`);
-            this._node.status({ fill: 'blue', shape: 'dot', text: `Set ${this.fanId} to ${this.opts.speed}` });
-            return delayPromise(this.opts.retryDelay[1]);
-          } else {
-            this.log.debug(`Skipping set speed step and first delay for ${this.fanId}`);
-            return Promise.resolve();
-          }
-        })
-        .then(() => {
-          if (!this._shutoff && this.opts.speed > 0) {
-            this.log.debug(`2nd set fan speed to ${this.opts.speed} for ${this.fanId}`);
-            let payload = newFanSpeed6Service(this.opts.shortId).speed(this.opts.speed).payload();
-            this.serviceSend(payload);
-            this._node.status({ fill: 'blue', shape: 'ring', text: `Set ${this.fanId} to ${this.opts.speed}` });
-          }
+    const sendPayload = (payload: any) => {
+      send([null, { payload: payload }]);
+    };
+
+    return Promise.resolve()
+      .then((resp) => {
+        this.log.debug(`${this.switchId} is ${this.switch().state()}`);
+        this.log.debug(`Shutoff (lightning) is ${this._shutoff}`);
+        if (this.switch().isOn() && (this._shutoff || this.opts.shouldTurnOff())) {
+          this.log.debug(`Turn off ${this.fanId}`);
+          let payload: ServicePayload = newFanSpeed6Service(this.opts.shortId).off().payload();
+          sendPayload(payload);
+          this._node.status({ fill: 'green', shape: 'ring', text: `Turn off ${this.fanId}` });
+        } else {
+          this.log.debug(`Fan ${this.fanId} is ${this.switch().state()}, no need to turn off`);
+        }
+        if (!this.switch().isOn() && !this._shutoff && this.opts.shouldTurnOn()) {
+          this.log.debug(`Turn on ${this.switchId} because fan was off`);
+          let payload = newSwitchService(this.switchId).on().payload();
+          sendPayload(payload);
+          bTurnedOn = true;
+          this._node.status({ fill: 'green', shape: 'dot', text: `Turned on ${this.fanId}` });
+        } else {
+          this.log.debug(`Fan ${this.fanId} is already on`);
+        }
+        if (!this._shutoff && this.opts.speed > 0 && bTurnedOn) {
+          this.log.debug(`1st delay of ${this.opts.retryDelay[0]} for ${this.switchId}`);
+          return delayPromise(this.opts.retryDelay[0]);
+        } else {
           return Promise.resolve();
-        })
-        .then(() => {
-          if (this.opts.shouldTimeout() && !this._shutoff) {
-            this.log.debug(`timeout ${this.opts.timeout} for ${this.switchId}`);
-            this._node.status({ fill: 'yellow', shape: 'ring', text: `${this.fanId} waiting ${this.opts.timeout} ms` });
-            return delayPromise(this.opts.timeout);
-          } else {
-            return Promise.resolve();
-          }
-        })
-        .then(() => {
-          if (this.opts.shouldTimeout() && !this._shutoff) {
-            this.log.debug(`timeout turn off for ${this.switchId}`);
-            let payload = newSwitchService(this.switchId).off().payload();
-            this.serviceSend(payload);
-            this._node.status({ fill: 'green', shape: 'ring', text: `Turn off ${this.fanId}` });
-          }
+        }
+      })
+      .then(() => {
+        if (!this._shutoff && this.opts.speed > 0) {
+          this.log.debug(`1st set fan speed to ${this.opts.speed} for ${this.fanId}`);
+          let payload = newFanSpeed6Service(this.opts.shortId).speed(this.opts.speed).payload();
+          sendPayload(payload);
+          this.log.debug(`2nd delay of ${this.opts.retryDelay[1]} for ${this.switchId}`);
+          this._node.status({ fill: 'blue', shape: 'dot', text: `Set ${this.fanId} to ${this.opts.speed}` });
+          return delayPromise(this.opts.retryDelay[1]);
+        } else {
+          this.log.debug(`Skipping set speed step and first delay for ${this.fanId}`);
           return Promise.resolve();
-        })
-        .catch((err) => {
-          return Promise.reject(err);
-        });
-    } else {
-      const err: Error = new Error('FanControl invalid input parameters');
-      this._node.error(err.message);
-      this._node.status({ fill: 'red', shape: 'dot', text: 'Invalid parameters' });
-      return Promise.reject(err);
-    }
+        }
+      })
+      .then(() => {
+        if (!this._shutoff && this.opts.speed > 0) {
+          this.log.debug(`2nd set fan speed to ${this.opts.speed} for ${this.fanId}`);
+          let payload = newFanSpeed6Service(this.opts.shortId).speed(this.opts.speed).payload();
+          sendPayload(payload);
+          this._node.status({ fill: 'blue', shape: 'ring', text: `Set ${this.fanId} to ${this.opts.speed}` });
+        }
+        return Promise.resolve();
+      })
+      .then(() => {
+        if (this.opts.shouldTimeout() && !this._shutoff) {
+          this.log.debug(`timeout ${this.opts.timeout} for ${this.switchId}`);
+          this._node.status({ fill: 'yellow', shape: 'ring', text: `${this.fanId} waiting ${this.opts.timeout} ms` });
+          return delayPromise(this.opts.timeout);
+        } else {
+          return Promise.resolve();
+        }
+      })
+      .then(() => {
+        if (this.opts.shouldTimeout() && !this._shutoff) {
+          this.log.debug(`timeout turn off for ${this.switchId}`);
+          let payload = newSwitchService(this.switchId).off().payload();
+          sendPayload(payload);
+          this._node.status({ fill: 'green', shape: 'ring', text: `Turn off ${this.fanId}` });
+        }
+        return Promise.resolve();
+      })
+      .catch((err) => {
+        return Promise.reject(err);
+      });
     return Promise.resolve();
   }
 }

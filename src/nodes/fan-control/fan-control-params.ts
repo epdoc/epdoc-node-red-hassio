@@ -14,6 +14,7 @@ const REG = {
  * Container for Fan Control parameters
  */
 export class FanControlParams {
+  public server: string;
   public debugEnabled = false;
   public shortId: EntityShortId;
   public speed: FanSpeed6Speed = 0;
@@ -24,6 +25,14 @@ export class FanControlParams {
   public shutoffEntityId: EntityId;
 
   constructor() {}
+
+  setServer(val: any): this {
+    if (isNonEmptyString(val)) {
+      this.server = val.replace(/\s+/, '');
+      this.server = this.server.charAt(0).toLowerCase() + this.server.slice(1);
+    }
+    return this;
+  }
 
   setDebug(val: any): this {
     if (val === true) {

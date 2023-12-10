@@ -40,18 +40,19 @@ export function fanControlNode(this: FanControlNode, config: FanControlNodeConfi
     })
   };
 
-  const nodeContext = node.context();
-  const flowContext = node.context().flow;
-  const globalContext = node.context().global;
-  node.log(`context keys = ${JSON.stringify(nodeContext.keys())}`);
-  node.log(`flow keys = ${JSON.stringify(flowContext.keys())}`);
-  node.log(`global keys = ${JSON.stringify(globalContext.keys())}`);
+  // const nodeContext = node.context();
+  // const flowContext = node.context().flow;
+  // const globalContext = node.context().global;
+  // node.log(`context keys = ${JSON.stringify(nodeContext.keys())}`);
+  // node.log(`flow keys = ${JSON.stringify(flowContext.keys())}`);
+  // node.log(`global keys = ${JSON.stringify(globalContext.keys())}`);
 
   const controller = new FanController(params);
 
   const processMsg = async (msg: NodeMessage, send: NodeSend, done: NodeDone) => {
     try {
       controller.testRun(msg, send, done);
+      controller.run(msg, send, done);
       // node.log(`Processing fan-control message: ${msg.payload}`);
 
       // node.log(`config: ${JSON.stringify(config)}`);

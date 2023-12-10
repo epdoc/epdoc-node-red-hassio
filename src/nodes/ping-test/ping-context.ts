@@ -1,4 +1,4 @@
-import { FunctionNodeBase, NodeRedContextApi, NodeRedGlobalApi } from 'epdoc-node-red-hautil';
+import { FunctionNodeBase, NodeRedContextApi } from 'epdoc-node-red-hautil';
 import { DateUtil, EpochMilliseconds, Milliseconds, durationUtil, isEpochMilliseconds } from 'epdoc-timeutil';
 import {
   Dict,
@@ -11,6 +11,7 @@ import {
   isNonEmptyString,
   isString
 } from 'epdoc-util';
+import { NodeContextData } from 'node-red';
 
 const TIMEOUTS = [2500, 13000, 13000];
 const SHORT = 'short';
@@ -179,7 +180,7 @@ export class PingContext extends FunctionNodeBase {
   private _long: PingContextLong;
   private _errors: Dict = {};
 
-  constructor(global: NodeRedGlobalApi, contextApi: NodeRedContextApi, payload?: PingFlowInputPayload) {
+  constructor(global: NodeContextData, contextApi: NodeRedContextApi, payload?: PingFlowInputPayload) {
     super(global, contextApi);
     const tNowMs = new Date().getTime();
 
@@ -219,7 +220,7 @@ export class PingContext extends FunctionNodeBase {
   }
 
   private initLongFromStorage(): this {
-    const long: PingContextLong = this.flow.get(LONG, 'file');
+    const long: PingContextLong = this.flow.get(LONG, 'file') as PingContextLong;
     if (isPingContextShort(long)) {
       this._long = long;
     } else if (isDict(long)) {
@@ -254,7 +255,7 @@ export class PingContext extends FunctionNodeBase {
   }
 
   private initShortFromStorage(): this {
-    const short: PingContextShort = this.flow.get(SHORT);
+    const short: PingContextShort = this.flow.get(SHORT) as PingContextShort;
     if (isPingContextShort(short)) {
       this._short = short;
     }

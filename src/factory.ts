@@ -1,21 +1,16 @@
-import {
-  NodeRedContextApi,
-  NodeRedEnvApi,
-  NodeRedFlowApi,
-  NodeRedGlobalApi,
-  NodeRedNodeApi
-} from 'epdoc-node-red-hautil';
+import { NodeRedContextApi, NodeRedEnvApi, NodeRedNodeApi } from 'epdoc-node-red-hautil';
+import { NodeContextData } from 'node-red';
 import { LocationHistory, LocationHistoryOpts } from './nodes/location-history/location-history';
 import { PingContext, PingFlowInputPayload } from './nodes/ping-test/ping-context';
 
-export function newNodeRedFlowFactory(global: NodeRedGlobalApi): NodeRedFlowFactory {
+export function newNodeRedFlowFactory(global: NodeContextData): NodeRedFlowFactory {
   return new NodeRedFlowFactory(global);
 }
 
 export class NodeRedFlowFactory {
-  protected _global: NodeRedGlobalApi;
+  protected _global: NodeContextData;
 
-  constructor(global: NodeRedGlobalApi) {
+  constructor(global: NodeContextData) {
     this._global = global;
   }
 
@@ -29,11 +24,11 @@ export class NodeRedFlowFactory {
 }
 
 export class NodeRedNodeFactory {
-  protected _global: NodeRedGlobalApi;
-  protected _flow: NodeRedFlowApi;
+  protected _global: NodeContextData;
+  protected _flow: NodeContextData;
   protected _env: NodeRedEnvApi;
 
-  constructor(global: NodeRedGlobalApi, flow: NodeRedFlowApi, env: NodeRedEnvApi) {
+  constructor(global: NodeContextData, flow: NodeContextData, env: NodeRedEnvApi) {
     this._global = global;
     this._flow = flow;
     this._env = env;

@@ -35,6 +35,7 @@ export function fanControlInstructionMap(inst: FanControlInstruction) {
 }
 
 export interface FanControlNodeConfig extends BaseNodeConfig {
+  server: string;
   fan: EntityShortId;
   enitityId: EntityId;
   instruction: FanControlInstruction;

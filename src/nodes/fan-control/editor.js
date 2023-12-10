@@ -20,6 +20,7 @@ RED.nodes.registerType('fan-control', {
   labelStyle: 'node_label_italic',
   defaults: {
     name: { value: '' },
+    server: { value: '', required: true },
     fan: { value: '' },
     entityId: { value: '' },
     instruction: { value: 'turn_on' },
@@ -29,15 +30,16 @@ RED.nodes.registerType('fan-control', {
     for: { value: '0' },
     forUnits: { value: 'minutes' }
   },
-  oneditsave: () => {
-    this.name = $('#node-input-name').typedInput('value');
-    this.fan = $('#node-input-fan').typedInput('value');
-    this.instruction = $('#node-input-instruction').typedInput('value');
-    this.setspeed = $('#node-input-setspeed').typedInput('value');
-    this.for = $('#node-input-for').typedInput('value');
-    this.forUnits = $('#node-input-forUnits').typedInput('value');
-    this.debugEnabled = $('#node-input-debugEnabled').typedInput('value');
-  },
+  // oneditsave: () => {
+  //   this.name = $('#node-input-name').typedInput('value');
+  //   this.server = $('#node-input-server').typedInput('value');
+  //   this.fan = $('#node-input-fan').typedInput('value');
+  //   this.instruction = $('#node-input-instruction').typedInput('value');
+  //   this.setspeed = $('#node-input-setspeed').typedInput('value');
+  //   this.for = $('#node-input-for').typedInput('value');
+  //   this.forUnits = $('#node-input-forUnits').typedInput('value');
+  //   this.debugEnabled = $('#node-input-debugEnabled').typedInput('value');
+  // },
   oneditprepare: () => {
     $('#node-input-fan').typedInput({
       type: 'fan',
