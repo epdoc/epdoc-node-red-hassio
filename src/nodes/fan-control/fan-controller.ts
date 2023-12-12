@@ -119,6 +119,20 @@ export class FanController {
     this.handlers = [];
     let handler: FanMessageHandler = new FanMessageHandler(this._node, msg, send, done, { params: this.params });
     this.handlers.push(handler);
-    return handler.init().run();
+    return handler
+      .init()
+      .run()
+      .then((resp) => {
+        handler.stop();
+        this.removeHandler(handler);
+      });
+  }
+
+  removeHandler(handler: FanMessageHandler): this {
+    const index = this.handlers.indexOf(handler);
+    if (index > -1) {
+      this.handlers.splice(index, 1);
+    }
+    return this;
   }
 }

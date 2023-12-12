@@ -60,6 +60,10 @@ export class MessageHandler {
     });
   }
 
+  hasTimers(): boolean {
+    return this._timers.length > 0;
+  }
+
   removeTimer(timerId: any) {
     let result: TimerData[] = [];
     this._timers.forEach((item) => {

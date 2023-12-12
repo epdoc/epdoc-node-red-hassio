@@ -69,8 +69,10 @@ export class FanMessageHandler extends MessageHandler {
   }
 
   stop(): this {
-    this.log.debug(`${this.fanId} STOPPED`);
-    this.status.red().dot().text(`${this.fanName()} STOPPED`).update();
+    if (this.hasTimers()) {
+      this.log.debug(`${this.fanId} STOPPED`);
+      this.status.red().dot().text(`${this.fanName()} STOPPED`).update();
+    }
     return super.stop();
   }
 
