@@ -1,5 +1,5 @@
 import { EntityId, EntityShortId, FanSpeed6Service, FanSpeed6Speed, isFanSpeed6Speed } from 'epdoc-node-red-hautil';
-import { Milliseconds } from 'epdoc-timeutil';
+import { Milliseconds, durationUtil } from 'epdoc-timeutil';
 import {
   Integer,
   asInt,
@@ -16,7 +16,7 @@ const REG = {
   onoff: new RegExp(/^(on|off)$/, 'i'),
   on: new RegExp(/on$/, 'i'),
   off: new RegExp(/off$/, 'i'),
-  speed: new RegExp(/[1-6]/)
+  speed: new RegExp(/speed_[1-6]/)
 };
 
 /**
@@ -150,14 +150,14 @@ export class FanControlParams {
   }
 
   shouldSetSpeed(): boolean {
-    return isPosInteger(this.speed);
+    return !this.shouldTurnOff() && isPosInteger(this.speed);
   }
 
   shouldTurnOff(): boolean {
-    return this.bOn !== true; //|| this.speed === 0;
+    return this.service === 'turn_off';
   }
   shouldTurnOn(): boolean {
-    return this.bOn === true; //|| this.speed > 0;
+    return this.service === 'turn_on' || this.speed > 0;
   }
 
   shouldTimeout(): boolean {
@@ -174,7 +174,7 @@ export class FanControlParams {
       s = `Turn ${this.shortId} On`;
     }
     if (this.timeout > 0) {
-      s += ` for ${this.timeout} ms`;
+      s += ` for ${durationUtil(this.timeout).format()}`;
     }
     return s;
   }

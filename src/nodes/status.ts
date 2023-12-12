@@ -53,6 +53,11 @@ export class Status {
     return this;
   }
 
+  append(text: string): this {
+    this._text += '; ' + text;
+    return this;
+  }
+
   error(err: Error | string) {
     if (isError(err)) {
       return this.text(err.message).red().ring().update();

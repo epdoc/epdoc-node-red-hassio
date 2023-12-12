@@ -6,7 +6,7 @@ import { createControllerDependencies } from '../helpers';
 import TypedInputService from '../typed-input-service';
 import { BaseNode } from '../types';
 import { FanController, FanControllerConstructor } from './fan-controller';
-import { FanControlNodeConfig, toFanControlNodeConfig } from './types';
+import { FanControlNodeConfig } from './types';
 
 export interface FanControlNode extends BaseNode {
   config: FanControlNodeConfig;
@@ -21,7 +21,7 @@ export function fanControlNode(this: FanControlNode, config: FanControlNodeConfi
   // @ts-ignore
   let node: FanControlNode = this as FanControlNode;
 
-  node.log(`fan-control config: ${JSON.stringify(toFanControlNodeConfig(config))}`);
+  // node.log(`fan-control config: ${JSON.stringify(toFanControlNodeConfig(config))}`);
 
   // const status = new Status({ node: node });
 

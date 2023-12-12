@@ -8,12 +8,12 @@ export type NumberAsString = string;
 export enum FanControlInstruction {
   TurnOn = 'turn_on',
   TurnOff = 'turn_off',
-  Speed1 = '1',
-  Speed2 = '2',
-  Speed3 = '3',
-  Speed4 = '4',
-  Speed5 = '5',
-  Speed6 = '6'
+  Speed1 = 'speed_1',
+  Speed2 = 'speed_2',
+  Speed3 = 'speed_3',
+  Speed4 = 'speed_4',
+  Speed5 = 'speed_5',
+  Speed6 = 'speed_6'
 }
 
 export type FanControlNodeInst = {

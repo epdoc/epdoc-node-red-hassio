@@ -1,23 +1,13 @@
-import {
-  EntityId,
-  EntityService,
-  EntityShortId,
-  EntityShortService,
-  FanSpeed6Speed,
-  NodeDone,
-  NodeRedLogFunction,
-  NodeSend,
-  ServicePayload
-} from 'epdoc-node-red-hautil';
+import { EntityId, EntityShortId, NodeDone, NodeRedLogFunction, NodeSend, ServicePayload } from 'epdoc-node-red-hautil';
 import { Milliseconds } from 'epdoc-timeutil';
-import { isDefined, isDict, isInteger, isNonEmptyString, isPosInteger } from 'epdoc-util';
+import { isDict, isNonEmptyString, isPosInteger } from 'epdoc-util';
 import { NodeContext, NodeContextData, NodeMessage } from 'node-red';
 import { OutputControllerConstructor } from 'nodes/output-controller';
 import { Status } from '../status';
 import { FanControlNode } from './fan-control-node';
 import { FanControlParams } from './fan-control-params';
 import { FanMessageHandler } from './fan-message-handler';
-import { FanControlNodeConfig, isFanControlNodeConfig } from './types';
+import { FanControlInstruction, FanControlNodeConfig, isFanControlNodeConfig } from './types';
 
 const REG = {
   onoff: new RegExp(/^(on|off)$/, 'i'),
@@ -35,11 +25,7 @@ export type PayloadSendFunction = (payload: ServicePayload) => void | Promise<vo
 export type FanControlPayload = {
   fan: EntityShortId;
   server: string;
-  setSpeed?: boolean;
-  speed?: FanSpeed6Speed;
-  percentage?: number;
-  service?: EntityService | EntityShortService;
-  timeoutEnabled?: boolean;
+  instruction: FanControlInstruction;
   timeout?: Milliseconds;
   shutOffEntityId?: EntityId;
   delay?: Milliseconds[];
@@ -63,7 +49,6 @@ export class FanController {
     this._node = params.node;
     this._status = new Status(params.node);
     this.setFanControlConfig(params.node.config);
-    this._status.green().ring().text('constructed').update();
   }
 
   get global(): NodeContextData {
@@ -93,7 +78,7 @@ export class FanController {
 
       // this.initBeforeRun();
     }
-    console.log(`setUiConfig/global ${JSON.stringify(this.global)}`);
+    // console.log(`setUiConfig/global ${JSON.stringify(this.global)}`);
     return this;
   }
 
@@ -104,21 +89,10 @@ export class FanController {
         .setDebug(params.debugEnabled)
         .setFan(params.fan)
         .setShutoff(params.shutOffEntityId)
-        .setPercentage(params.percentage)
-        .setService(params.service)
-        .setDelay(params.delay);
+        .setInstruction(params.instruction)
+        .setDelay(params.delay)
+        .setTimeout(isPosInteger(params.timeout), params.timeout);
 
-      if (
-        (this.params.bOn && (params.setSpeed || isPosInteger(params.speed))) ||
-        (isInteger(params.speed) && !isDefined(params.service))
-      ) {
-        this.params.setSpeed(true, params.speed);
-      } else if (params.setSpeed === false) {
-        this.params.setSpeed(false, 0);
-      }
-      if (this.params.bOn && isPosInteger(params.timeout)) {
-        this.params.setTimeout(true, params.timeout);
-      }
       if (this.params.debugEnabled) {
         this._node.log(`Input params: ${JSON.stringify(params)}`);
         this._node.log(this.params.toString());
@@ -138,13 +112,13 @@ export class FanController {
   async run(msg: NodeMessage, send: NodeSend, done: NodeDone): Promise<void> {
     if (isFanControlPayload(msg.payload)) {
       this.setPayloadConfig(msg.payload);
-      this.handlers.forEach((handler) => {
-        handler.stop();
-      });
-      this.handlers = [];
-      let handler: FanMessageHandler = new FanMessageHandler(this._node, msg, send, done, { params: this.params });
-      this.handlers.push(handler);
-      return handler.init().run();
     }
+    this.handlers.forEach((handler) => {
+      handler.stop();
+    });
+    this.handlers = [];
+    let handler: FanMessageHandler = new FanMessageHandler(this._node, msg, send, done, { params: this.params });
+    this.handlers.push(handler);
+    return handler.init().run();
   }
 }

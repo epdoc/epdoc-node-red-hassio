@@ -7,7 +7,7 @@ import {
   newFanSpeed6Service,
   newSwitchService
 } from 'epdoc-node-red-hautil';
-import { Milliseconds } from 'epdoc-timeutil';
+import { Milliseconds, durationUtil } from 'epdoc-timeutil';
 import { isNonEmptyString } from 'epdoc-util';
 import { NodeMessage } from 'node-red';
 import { MessageHandler } from '../message-handler';
@@ -39,9 +39,9 @@ export class FanMessageHandler extends MessageHandler {
     this.params = opts.params;
     if (this.params.debugEnabled) {
       this.log.debug = (msg) => {
-        this.node.log(msg);
+        this.node.log(`[${this.id}.${this.step}] ${msg}`);
       };
-      this.node.log('debugEnabled = true');
+      this.log.debug('Debug enabled');
     }
     this.ha = new HA(this.node.context().global, this.params.server);
     if (this.ha) {
@@ -65,8 +65,13 @@ export class FanMessageHandler extends MessageHandler {
   }
 
   init(): this {
-    this.log.debug('Init');
     return this;
+  }
+
+  stop(): this {
+    this.log.debug(`${this.fanId} STOPPED`);
+    this.status.red().dot().text(`${this.fanName()} STOPPED`).update();
+    return super.stop();
   }
 
   isValid(): boolean {
@@ -75,6 +80,11 @@ export class FanMessageHandler extends MessageHandler {
 
   fan(): Entity {
     return this.ha.entity('fan.' + this.params.shortId);
+  }
+
+  fanName(): string {
+    const entity = this.ha.entity('fan.' + this.params.shortId);
+    return entity.name ? entity.name : entity.entityId;
   }
 
   get fanId(): EntityId {
@@ -90,32 +100,33 @@ export class FanMessageHandler extends MessageHandler {
   }
 
   sendPayload(payload: any): this {
+    this.log.debug(`send ${JSON.stringify(payload)}`);
     this.send([null, { payload: payload }]);
     return this;
   }
 
   protected turnOn(reason: string): this {
-    this.log.debug(`[${this.step}] Turn on ${this.switchId} because ${reason}`);
+    this.log.debug(`${this.switchId} turn on because ${reason}`);
     let payload = newSwitchService(this.switchId).on().payload();
     this.sendPayload(payload);
     this.bTurnedOn = true;
-    this.status.green().dot().text(`Turn ${this.fanId} on`).update();
+    this.status.blue().dot().text(`${this.fanName()} on`).update();
     return this;
   }
 
   protected setSpeed(reason?: string): this {
-    this.log.debug(`[${this.step}] Set ${this.fanId} speed to ${this.params.speed} (${reason})`);
+    this.log.debug(`${this.fanId} set speed to ${this.params.speed} (${reason})`);
     let payload: ServicePayload = newFanSpeed6Service(this.params.shortId).speed(this.params.speed).payload();
     this.sendPayload(payload);
-    this.status.green().dot().text(`Set ${this.fanId} speed to ${this.params.speed}`).update();
+    this.status.blue().dot().text(`${this.fanName()} speed ${this.params.speed}`).update();
     return this;
   }
 
   protected turnOff(reason: string): this {
-    this.log.debug(`[${this.step}] Turn off ${this.fanId} because ${reason}`);
+    this.log.debug(`${this.fanId} turn off because ${reason}`);
     let payload: ServicePayload = newFanSpeed6Service(this.params.shortId).off().payload();
     this.sendPayload(payload);
-    this.status.green().ring().text(`Turn ${this.fanId} off`).update();
+    this.status.blue().ring().text(`${this.fanName()} off`).update();
     return this;
   }
 
@@ -123,23 +134,23 @@ export class FanMessageHandler extends MessageHandler {
     return Promise.resolve()
       .then((resp) => {
         ++this.step;
-        this.log.debug(`[${this.step}] ${this.switchId} set-speed delay ${delay} ms`);
-        this.status.blue().ring().text(`${this.fanId} waiting ...`);
+        this.log.debug(`${this.switchId} set-speed delay ${delay} ms`);
+        this.status.append(`waiting ${durationUtil(delay).format()}`).update();
         return this.promiseDelay(delay);
       })
       .then((resp) => {
         ++this.step;
         if (this.shutoff) {
-          this.log.debug(`[${this.step}] ${this.fanId} set fan speed aborted because of shutdown`);
-          this.status.red().ring().text(`${this.fanId} shutdown`).update();
+          this.log.debug(`${this.fanId} set fan speed aborted because of shutdown`);
+          this.status.red().ring().text(`${this.fanName()} shutdown`).update();
         } else if (this._stop) {
-          this.log.debug(`[${this.step}] ${this.fanId} set fan speed aborted because of STOP`);
-          this.status.red().ring().text(`${this.fanId} STOP`).update();
+          this.log.debug(`${this.fanId} set fan speed aborted because of STOP`);
+          this.status.red().ring().text(`${this.fanName()} STOP`).update();
         } else {
-          this.log.debug(`[${this.step}] ${this.fanId} set fan speed to ${this.params.speed}`);
+          this.log.debug(`${this.fanId} set fan speed to ${this.params.speed}`);
           let payload = newFanSpeed6Service(this.params.shortId).speed(this.params.speed).payload();
           this.sendPayload(payload);
-          this.status.blue().dot().text(`${this.fanId} speed ${this.params.speed}`).update();
+          this.status.blue().dot().text(`${this.fanName()} speed ${this.params.speed}`).update();
         }
         return Promise.resolve();
       });
@@ -148,8 +159,8 @@ export class FanMessageHandler extends MessageHandler {
     return Promise.resolve()
       .then((resp) => {
         ++this.step;
-        this.log.debug(`[${this.step}] ${this.switchId} off delay ${delay} ms`);
-        this.status.blue().ring().text(`${this.fanId} waiting...`).update();
+        this.log.debug(`${this.switchId} off delay ${delay} ms`);
+        this.status.append(`waiting ${durationUtil(delay).format()}`).update();
         return this.promiseDelay(delay);
       })
       .then((resp) => {
@@ -159,14 +170,16 @@ export class FanMessageHandler extends MessageHandler {
   }
 
   async run(): Promise<void> {
-    this.log.debug('run');
+    // this.log.debug('run');
+    this.status.grey().ring().text('Run').update();
+    this.log.debug(`Run: ${this.params.toString()}`);
     this.bTurnedOn = false;
 
     return Promise.resolve()
       .then((resp) => {
         ++this.step;
-        this.log.debug(`[${this.step}] ${this.switchId} is ${this.switch().state()}`);
-        this.log.debug(`[${this.step}] Shutoff (lightning) is ${this.shutoff}`);
+        this.log.debug(`${this.switchId} is ${this.switch().state()}`);
+        this.log.debug(`Shutoff (lightning) is ${this.shutoff}`);
         if (this.switch().isOn()) {
           if (this.params.shouldTurnOff()) {
             this.turnOff('fan was on');
@@ -175,7 +188,7 @@ export class FanMessageHandler extends MessageHandler {
           } else if (this.params.shouldSetSpeed()) {
             this.setSpeed('already on');
           } else {
-            this.log.debug(`[${this.step}] ${this.fanId} is already on`);
+            this.log.debug(`${this.fanId} is already on`);
           }
         } else {
           // isOff
@@ -205,6 +218,10 @@ export class FanMessageHandler extends MessageHandler {
         } else {
           return Promise.resolve();
         }
+      })
+      .then((resp) => {
+        this.log.debug('Run complete');
+        this.status.green().dot().append('done').update();
       })
       .catch((err) => {
         return Promise.reject(err);

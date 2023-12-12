@@ -1,4 +1,5 @@
 import { Milliseconds } from 'epdoc-timeutil';
+import { pad } from 'epdoc-util';
 import { NodeMessage } from 'node-red';
 import { NodeDone, NodeSend } from './nodes';
 import { Status } from './status';
@@ -9,6 +10,11 @@ type TimerData = {
   resolve: Function;
 };
 
+let _uid = 0;
+function getNewId(): string {
+  return pad(++_uid, 3);
+}
+
 export class MessageHandler {
   protected node: BaseNode;
   protected status: Status;
@@ -17,6 +23,7 @@ export class MessageHandler {
   protected done: NodeDone;
   protected _stop = false;
   protected _timers: TimerData[] = [];
+  readonly id = getNewId();
 
   constructor(node: BaseNode, msg: NodeMessage, send: NodeSend, done: NodeDone) {
     this.node = node;

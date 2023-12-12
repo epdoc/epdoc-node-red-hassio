@@ -35,7 +35,7 @@ RED.nodes.registerType('fan-control', {
       s = `Turn ${f} On`;
     }
     if (this.for > 0) {
-      s += ` for ${this.for} ${this.forUnits})`;
+      s += `, turn off after ${this.for}${this.forUnits.charAt(0)}`;
     }
     return this.name || s;
   },
@@ -90,11 +90,11 @@ RED.nodes.registerType('fan-control', {
         'msg'
       ]
     });
-    $('#node-input-setspeed').typedInput({
-      type: 'setspeed',
+    $('#node-input-setSpeed').typedInput({
+      type: 'setSpeed',
       types: [
         {
-          value: 'setspeed',
+          value: 'setSpeed',
           options: [
             { value: 'true', label: 'Set speed to' },
             { value: 'false', label: 'Leave speed as-is' }
@@ -158,20 +158,20 @@ RED.nodes.registerType('fan-control', {
         $('.node-wrapper-on').hide();
       }
     });
-    $('#node-input-setspeed').on('change', (event, type, value) => {
+    $('#node-input-setSpeed').on('change', (event, type, value) => {
       // this.label();
       if (value === 'true') {
-        $('.node-wrapper-speed').show();
+        $('.node-wrapper-speed').prop('disabled', false);
       } else if (value === 'false') {
-        $('.node-wrapper-speed').hide();
+        $('.node-wrapper-speed').prop('disabled', true);
       }
     });
     $('#node-input-timeoutEnabled').on('change', (event, type, value) => {
       // this.label();
       if (value === 'true') {
-        $('.node-wrapper-timeout').show();
+        $('.node-wrapper-timeout').prop('disabled', false);
       } else if (value === 'false') {
-        $('.node-wrapper-timeout').hide();
+        $('.node-wrapper-timeout').prop('disabled', true);
       }
     });
   }
