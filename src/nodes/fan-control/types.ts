@@ -1,6 +1,6 @@
+import { Milliseconds } from '@epdoc/timeutil';
 import { EntityShortId } from 'epdoc-node-red-hautil';
-import { Milliseconds } from 'epdoc-timeutil';
-import { Dict, Integer, asInt, isNonEmptyString, pick } from 'epdoc-util';
+import { Dict, Integer, isNonEmptyString, pick } from 'epdoc-util';
 import { BaseNodeConfig } from 'nodes/types';
 
 export type NumberAsString = string;
@@ -15,24 +15,41 @@ export enum FanControlInstruction {
   Speed5 = 'speed_5',
   Speed6 = 'speed_6'
 }
+// export function fanControlSpeedToInstruction(speed: any): FanControlInstruction {
+//   if (isPosInteger(speed) && speed <= 6) {
+//     return ('speed_' + String(speed)) as FanControlInstruction;
+//   }
+//   return FanControlInstruction.Speed2;
+// }
 
-export type FanControlNodeInst = {
-  service: 'turn_on' | 'turn_off';
-  speed?: Integer;
-};
+// const REG = {
+//   speedInst: new RegExp(/^speed_(\d)$/)
+// };
+// export function fanControlInstructionToSpeed(inst: FanControlInstruction): FanSpeed6Speed {
+//   const p = inst.match(REG.speedInst);
+//   if (p && p.length > 1) {
+//     return asInt(p[1]);
+//   }
+//   return -1;
+// }
 
-export function fanControlInstructionMap(inst: FanControlInstruction) {
-  let result: FanControlNodeInst = { service: 'turn_on' };
-  if (inst === FanControlInstruction.TurnOn) {
-    return result;
-  }
-  if (inst === FanControlInstruction.TurnOff) {
-    result.service = 'turn_off';
-    return result;
-  }
-  result.speed = asInt(inst);
-  return result;
-}
+// export type FanControlNodeInst = {
+//   service: 'turn_on' | 'turn_off';
+//   speed?: Integer;
+// };
+
+// export function fanControlInstructionMap(inst: FanControlInstruction) {
+//   let result: FanControlNodeInst = { service: 'turn_on' };
+//   if (inst === FanControlInstruction.TurnOn) {
+//     return result;
+//   }
+//   if (inst === FanControlInstruction.TurnOff) {
+//     result.service = 'turn_off';
+//     return result;
+//   }
+//   result.speed = asInt(inst);
+//   return result;
+// }
 
 export interface FanControlNodeConfig extends BaseNodeConfig {
   server: string;

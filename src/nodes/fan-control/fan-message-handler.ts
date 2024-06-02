@@ -1,3 +1,4 @@
+import { Milliseconds, durationUtil } from '@epdoc/timeutil';
 import {
   Entity,
   EntityId,
@@ -7,7 +8,6 @@ import {
   newFanSpeed6Service,
   newSwitchService
 } from 'epdoc-node-red-hautil';
-import { Milliseconds, durationUtil } from 'epdoc-timeutil';
 import { isNonEmptyString } from 'epdoc-util';
 import { NodeMessage } from 'node-red';
 import { MessageHandler } from '../message-handler';
@@ -132,30 +132,35 @@ export class FanMessageHandler extends MessageHandler {
     return this;
   }
 
-  delayAndSetSpeed(delay: Milliseconds): Promise<void> {
-    return Promise.resolve()
-      .then((resp) => {
-        ++this.step;
-        this.log.debug(`${this.switchId} set-speed delay ${delay} ms`);
-        this.status.append(`waiting ${durationUtil(delay).format()}`).update();
-        return this.promiseDelay(delay);
-      })
-      .then((resp) => {
-        ++this.step;
-        if (this.shutoff) {
-          this.log.debug(`${this.fanId} set fan speed aborted because of shutdown`);
-          this.status.red().ring().text(`${this.fanName()} shutdown`).update();
-        } else if (this._stop) {
-          this.log.debug(`${this.fanId} set fan speed aborted because of STOP`);
-          this.status.red().ring().text(`${this.fanName()} STOP`).update();
-        } else {
-          this.log.debug(`${this.fanId} set fan speed to ${this.params.speed}`);
-          let payload = newFanSpeed6Service(this.params.shortId).speed(this.params.speed).payload();
-          this.sendPayload(payload);
-          this.status.blue().dot().text(`${this.fanName()} speed ${this.params.speed}`).update();
-        }
-        return Promise.resolve();
-      });
+  async delayAndSetSpeed(delay: Milliseconds): Promise<void> {
+    return Promise.resolve().then(async (resp) => {
+      if (delay && this.bTurnedOn && this.params.shouldSetSpeed() && !this._stop) {
+        return Promise.resolve()
+          .then((resp) => {
+            ++this.step;
+            this.log.debug(`${this.switchId} set-speed delay ${delay} ms`);
+            this.status.append(`waiting ${durationUtil(delay).format()}`).update();
+            return this.promiseDelay(delay);
+          })
+          .then((resp) => {
+            ++this.step;
+            if (this.shutoff) {
+              this.log.debug(`${this.fanId} set fan speed aborted because of shutdown`);
+              this.status.red().ring().text(`${this.fanName()} shutdown`).update();
+            } else if (this._stop) {
+              this.log.debug(`${this.fanId} set fan speed aborted because of STOP`);
+              this.status.red().ring().text(`${this.fanName()} STOP`).update();
+            } else {
+              this.log.debug(`${this.fanId} set fan speed to ${this.params.speed}`);
+              let payload = newFanSpeed6Service(this.params.shortId).speed(this.params.speed).payload();
+              this.sendPayload(payload);
+              this.status.blue().dot().text(`${this.fanName()} speed ${this.params.speed}`).update();
+            }
+            return Promise.resolve();
+          });
+      }
+      return Promise.resolve();
+    });
   }
   delayAndOff(delay: Milliseconds): Promise<void> {
     return Promise.resolve()
@@ -169,6 +174,15 @@ export class FanMessageHandler extends MessageHandler {
         ++this.step;
         this.turnOff('timer expired');
       });
+  }
+
+  async delaysAndSetSpeed(): Promise<void> {
+    const jobs = [];
+    for (const delay of this.params.retryDelay) {
+      const job = await this.delayAndSetSpeed(delay);
+      jobs.push(job);
+    }
+    return Promise.resolve();
   }
 
   async run(): Promise<void> {
@@ -202,14 +216,8 @@ export class FanMessageHandler extends MessageHandler {
         }
       })
       .then((resp) => {
-        if (this.params.shouldSetSpeed()) {
-          return this.delayAndSetSpeed(this.params.retryDelay[0]);
-        }
-      })
-      .then((resp) => {
-        if (this.bTurnedOn && this.params.shouldSetSpeed()) {
-          return this.delayAndSetSpeed(this.params.retryDelay[1]);
-        }
+        // this.log.debug(`params: ${JSON.stringify(this.params.toObject())}`);
+        return this.delaysAndSetSpeed();
       })
       .then((resp) => {
         ++this.step;

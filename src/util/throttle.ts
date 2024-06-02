@@ -1,4 +1,4 @@
-import { Milliseconds } from 'epdoc-timeutil';
+import { Milliseconds } from '@epdoc/timeutil';
 import { isDict } from 'epdoc-util';
 import debounce from './debounce';
 

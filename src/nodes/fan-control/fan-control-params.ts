@@ -1,14 +1,15 @@
+import { Milliseconds, durationUtil } from '@epdoc/timeutil';
 import { EntityId, EntityShortId, FanSpeed6Service, FanSpeed6Speed, isFanSpeed6Speed } from 'epdoc-node-red-hautil';
-import { Milliseconds, durationUtil } from 'epdoc-timeutil';
 import {
   Integer,
+  asFloat,
   asInt,
   isDefined,
   isNonEmptyArray,
   isNonEmptyString,
   isNumber,
-  isPosInteger,
-  isString
+  isString,
+  pick
 } from 'epdoc-util';
 import { FanControlInstruction, NumberAsString, TimeUnit } from './types';
 
@@ -23,17 +24,33 @@ const REG = {
  * Container for Fan Control parameters
  */
 export class FanControlParams {
+  private _isFanControlParams = true;
   public server: string;
   public debugEnabled = false;
   public shortId: EntityShortId;
   public speed: FanSpeed6Speed = 0;
   public service: FanControlInstruction.TurnOn | FanControlInstruction.TurnOff = FanControlInstruction.TurnOff;
-  public bOn: boolean = false;
+  // public bOn: boolean = false;
   public timeout: Milliseconds = 0;
   public retryDelay: Milliseconds[] = [1000, 3000];
   public shutoffEntityId: EntityId;
 
-  constructor() {}
+  constructor(params?: FanControlParams) {
+    if (FanControlParams.isInstance(params)) {
+      this.server = params.server;
+      this.debugEnabled = params.debugEnabled;
+      this.shortId = params.shortId;
+      this.speed = params.speed;
+      this.service = params.service;
+      this.timeout = params.timeout;
+      this.retryDelay = params.retryDelay;
+      this.shutoffEntityId = params.shutoffEntityId;
+    }
+  }
+
+  static isInstance(val: any): val is FanControlParams {
+    return val && val._isFanControlParams;
+  }
 
   setServer(val: any): this {
     if (isNonEmptyString(val)) {
@@ -73,19 +90,21 @@ export class FanControlParams {
     return this;
   }
 
-  setSpeed(enable: boolean, speed: FanSpeed6Speed | undefined): this {
-    if (enable && isFanSpeed6Speed(speed)) {
-      this.speed = speed;
+  setSpeed(enable: boolean, speed: any | undefined): this {
+    const sp = asInt(speed);
+    if (enable && isFanSpeed6Speed(sp)) {
+      this.speed = sp;
       if (this.speed === 0) {
         return this.off();
       }
-    } else if (enable === false) {
-      this.speed = 0;
+      // } else if (enable === false) {
+      //   this.speed = 0;
     }
     return this;
   }
 
-  setPercentage(pct: number | undefined): this {
+  setPercentage(percent: any): this {
+    const pct = asFloat(percent);
     if (isNumber(pct)) {
       this.speed = FanSpeed6Service.percentageToSpeed(pct);
     }
@@ -139,18 +158,18 @@ export class FanControlParams {
 
   on(val: boolean = true): this {
     this.service = val ? FanControlInstruction.TurnOn : FanControlInstruction.TurnOff;
-    this.bOn = val;
+    // this.bOn = val;
     return this;
   }
 
   off(val: boolean = true): this {
     this.service = val ? FanControlInstruction.TurnOff : FanControlInstruction.TurnOn;
-    this.bOn = val ? false : true;
+    // this.bOn = val ? false : true;
     return this;
   }
 
   shouldSetSpeed(): boolean {
-    return !this.shouldTurnOff() && isPosInteger(this.speed);
+    return !this.shouldTurnOff() && isFanSpeed6Speed(this.speed) && this.speed > 0;
   }
 
   shouldTurnOff(): boolean {
@@ -177,5 +196,19 @@ export class FanControlParams {
       s += ` for ${durationUtil(this.timeout).format()}`;
     }
     return s;
+  }
+
+  toData() {
+    return pick(
+      this,
+      'server',
+      'shortId',
+      'service',
+      'speed',
+      'timeout',
+      'shutoffEntityId',
+      'debugEnabled',
+      'retryDelay'
+    );
   }
 }

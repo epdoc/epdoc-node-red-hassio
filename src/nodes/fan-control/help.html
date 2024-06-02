@@ -10,7 +10,7 @@
 
 <p>Fan control instructions may be input via the message payload, as shown in
   this example. Any values that are set will override values set in the UI
-  console.</p>
+  console. </p>
 
 <pre>
   <code>
@@ -36,8 +36,9 @@
   </dd>
 
   <dt class="optional">delay <span class="property-type">string</span></dt>
-  <dd>Array of millisecod delays, after fan is turned on, after which to send
-    the speed change instruction. Default delays are 1000 and 3000 ms.</dd>
+  <dd>Array of millisecod delays, after fan is (turned) on, after which to send
+    the speed change instruction. Default array of delays is <code>[1000,
+      3000]</code>.</dd>
 
   <dt class="optional">shutoffEntityId <span class="property-type">string</span></dt>
   <dd>a binary entity that can be used to keep the fan from turning on. this can
@@ -54,6 +55,10 @@
   <dd>Enable debug messages to Node-RED debug.</dd>
 </dl>
 
+<p>If this node receives a new fan control instruction while it is still
+  executing a previous instruction, the earlier instruction(s) is immediatey
+  terminated. </p>
+
 <h3>Outputs</h3>
 
 <dl class="message-properties">
@@ -64,6 +69,7 @@
   <dd>An object that should be sent to the input of a Home Assistant Call
     Service node. Leave settings blank in the Call Service Node's UI console.</dd>
 </dl>
+
 
 
 <h3>Notes</h3>

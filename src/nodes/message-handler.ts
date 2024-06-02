@@ -1,4 +1,4 @@
-import { Milliseconds } from 'epdoc-timeutil';
+import { Milliseconds } from '@epdoc/timeutil';
 import { pad } from 'epdoc-util';
 import { NodeMessage } from 'node-red';
 import { NodeDone, NodeSend } from './nodes';

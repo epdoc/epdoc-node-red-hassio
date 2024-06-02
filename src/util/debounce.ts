@@ -1,4 +1,4 @@
-import { EpochMilliseconds, Milliseconds } from 'epdoc-timeutil';
+import { EpochMilliseconds, Milliseconds } from '@epdoc/timeutil';
 import { isObject } from 'epdoc-util';
 import root from './root';
 

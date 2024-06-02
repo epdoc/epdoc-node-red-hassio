@@ -1,4 +1,4 @@
-import { EpochMilliseconds } from 'epdoc-timeutil';
+import { EpochMilliseconds } from '@epdoc/timeutil';
 import { Integer, deepCopy, isArray, isNonEmptyArray } from 'epdoc-util';
 import { HistoryLocation, LocationHistory, LocationHistoryItem, Person } from './location-history';
 

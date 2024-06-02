@@ -1,5 +1,5 @@
+import { Milliseconds } from '@epdoc/timeutil';
 import { EntityId, EntityShortId, NodeDone, NodeRedLogFunction, NodeSend, ServicePayload } from 'epdoc-node-red-hautil';
-import { Milliseconds } from 'epdoc-timeutil';
 import { isDict, isNonEmptyString, isPosInteger } from 'epdoc-util';
 import { NodeContext, NodeContextData, NodeMessage } from 'node-red';
 import { OutputControllerConstructor } from 'nodes/output-controller';
@@ -75,6 +75,9 @@ export class FanController {
         .setInstruction(config.instruction)
         .setSpeed(config.setSpeed, config.speed)
         .setTimeout(config.timeoutEnabled, config.for, config.forUnits);
+      // if (config.setSpeed === true && isFanSpeed6Speed(config.speed)) {
+      //   this.params.setInstruction(fanControlSpeedToInstruction(config.speed));
+      // }
 
       // this.initBeforeRun();
     }
@@ -110,14 +113,16 @@ export class FanController {
    * switch.
    */
   async run(msg: NodeMessage, send: NodeSend, done: NodeDone): Promise<void> {
-    if (isFanControlPayload(msg.payload)) {
-      this.setPayloadConfig(msg.payload);
-    }
     this.handlers.forEach((handler) => {
       handler.stop();
     });
     this.handlers = [];
-    let handler: FanMessageHandler = new FanMessageHandler(this._node, msg, send, done, { params: this.params });
+    if (isFanControlPayload(msg.payload)) {
+      this.setPayloadConfig(msg.payload);
+    }
+    let handler: FanMessageHandler = new FanMessageHandler(this._node, msg, send, done, {
+      params: new FanControlParams(this.params)
+    });
     this.handlers.push(handler);
     return handler
       .init()

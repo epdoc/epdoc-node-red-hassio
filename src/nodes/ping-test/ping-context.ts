@@ -1,5 +1,5 @@
+import { DateUtil, EpochMilliseconds, Milliseconds, durationUtil, isEpochMilliseconds } from '@epdoc/timeutil';
 import { FunctionNodeBase, NodeRedContextApi } from 'epdoc-node-red-hautil';
-import { DateUtil, EpochMilliseconds, Milliseconds, durationUtil, isEpochMilliseconds } from 'epdoc-timeutil';
 import {
   Dict,
   Integer,

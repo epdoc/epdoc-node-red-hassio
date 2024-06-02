@@ -61,8 +61,8 @@ let settings = {
   
   functionGlobalContext: {
     // os:require('os'),
-    "epdoc-util": require('epdoc-util'),
-    "epdoc-timeutil": require('epdoc-timeutil'),
+    "@epdoc/typeutil": require('@epdoc/typeutil'),
+    "@epdoc/timeutil": require('@epdoc/timeutil'),
     "epdoc-node-red-hautil": require('epdoc-node-red-hautil'),
     "epdoc-node-red-hassio": require('epdoc-node-red-hassio')
   },
@@ -84,8 +84,8 @@ The inject node should be set to _inject once_, after maybe 3 seconds.
 
 ```javascript
 const names = {
-    util: 'epdoc-util',
-    timeutil: 'epdoc-timeutil',
+    util: '@epdoc/typeutil',
+    timeutil: '@epdoc/timeutil',
     hassio: 'epdoc-node-red-hassio',
     hautil: 'epdoc-node-red-hautil'
 };

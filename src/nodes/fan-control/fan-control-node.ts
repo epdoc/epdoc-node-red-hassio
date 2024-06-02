@@ -38,6 +38,10 @@ export function fanControlNode(this: FanControlNode, config: FanControlNodeConfi
     })
   };
 
+  // params.node.on(NodeEvent.Input, (p) => {
+  //   console.log(`onInput ${JSON.stringify(p)}`);
+  // });
+
   // const nodeContext = node.context();
   // const flowContext = node.context().flow;
   // const globalContext = node.context().global;
@@ -67,6 +71,10 @@ export function fanControlNode(this: FanControlNode, config: FanControlNodeConfi
       done(err as Error);
     }
   };
+
+  // RED.events.on('nodes:change', (arg: any) => {
+  //   console.log(`nodes:change ${JSON.stringify(arg)}`);
+  // });
 
   const done = () => {
     node.log('fan-control done');

@@ -1,5 +1,5 @@
+import { EpochMilliseconds } from '@epdoc/timeutil';
 import { ContextKey, FunctionNodeBase, NodeContextGlobalData, NodeRedContextApi } from 'epdoc-node-red-hautil';
-import { EpochMilliseconds } from 'epdoc-timeutil';
 import { Dict, isArray } from 'epdoc-util';
 import { HistoryFilter } from './history-filter';
 
