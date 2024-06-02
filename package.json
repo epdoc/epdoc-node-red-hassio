@@ -80,7 +80,7 @@
     "@epdoc/timeutil": "^2.4.8",
     "@epdoc/typeutil": "^1.0.9",
     "debug": "^4.3.5",
-    "@epdoc/node-red-hautil": "^1.2.6",
+    "@epdoc/node-red-hautil": "^1.2.7",
     "home-assistant-js-websocket": "^9.3.0",
     "node-red-contrib-home-assistant-websocket": "^0.64.0",
     "ws": "^8.17.0"
