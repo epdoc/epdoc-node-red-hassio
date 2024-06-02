@@ -1,0 +1,46 @@
+<script type="text/javascript">
+  RED.nodes.registerType('ping-test',{
+      category: 'function',
+      color: '#a6bbcf',
+      defaults: {
+          name: {value:""}
+      },
+      inputs: 1,
+      outputs: 1,
+      icon: "file.svg",
+      label: function() {
+          return this.name||"ping-test";
+      }
+  });
+</script>
+
+<script type="text/html" data-template-name="ping-test">
+  <div class="form-row">
+    <label for="node-input-fan"><i class="fa fa-tag"></i> Fan</label>
+    <input type="text" id="node-input-fan" placeholder="Fan">
+</div>
+<div class="form-row">
+  <label for="node-input-hosts0"><i class="fa fa-tag"></i> Hosts to target on first ping test</label>
+  <input type="text" id="node-input-hosts0" placeholder="192.168.1.60, google.com">
+</div>
+<div class="form-row">
+  <label for="node-input-timeout0"><i class="fa fa-tag"></i> Timeout for first ping test (ms)</label>
+  <input type="text" id="node-input-timeout0" placeholder="3000">
+</div>
+<div class="form-row">
+  <label for="node-input-hosts1"><i class="fa fa-tag"></i> Hosts to target on second ping test, if first test fails</label>
+  <input type="text" id="node-input-hosts1" placeholder="192.168.1.60, google.com">
+</div>
+<div class="form-row">
+  <label for="node-input-timeout1"><i class="fa fa-tag"></i> Timeout for second ping test (ms)</label>
+  <input type="text" id="node-input-timeout1" placeholder="7000">
+</div>
+<div class="form-row">
+  <label for="node-input-debug"><i class="fa fa-tag"></i> Enable debug</label>
+  <input type="checkbox" id="node-input-debug">
+</div>
+</script>
+
+<script type="text/html" data-help-name="ping-test">
+  <p>A node to test network connectivity</p>
+</script>

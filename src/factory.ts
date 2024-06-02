@@ -1,27 +1,17 @@
-import {
-  NodeRedContextApi,
-  NodeRedEnvApi,
-  NodeRedFlowApi,
-  NodeRedGlobalApi,
-  NodeRedNodeApi,
-  isNodeRedContextApi
-} from 'epdoc-node-red-hautil';
-import { FanControl } from './fan-control';
-import { LocationHistory, LocationHistoryOpts } from './location-history';
-import { PingContext, PingFlowInputPayload } from './ping-context';
+import { NodeRedContextApi, NodeRedEnvApi, NodeRedNodeApi } from 'epdoc-node-red-hautil';
+import { NodeContextData } from 'node-red';
+import { LocationHistory, LocationHistoryOpts } from './nodes/location-history/location-history';
+import { PingContext, PingFlowInputPayload } from './nodes/ping-test/ping-context';
+
+export function newNodeRedFlowFactory(global: NodeContextData): NodeRedFlowFactory {
+  return new NodeRedFlowFactory(global);
+}
 
 export class NodeRedFlowFactory {
-  protected _global: NodeRedGlobalApi;
+  protected _global: NodeContextData;
 
-  constructor(global: NodeRedGlobalApi) {
+  constructor(global: NodeContextData) {
     this._global = global;
-  }
-
-  makeFanControl(contextApi: NodeRedContextApi): FanControl {
-    if (!isNodeRedContextApi(contextApi)) {
-      throw new Error('FanControlFlowFactory not propertly configured');
-    }
-    return new FanControl(this._global, contextApi);
   }
 
   makieLocationHistory(contextApi: NodeRedContextApi, opts?: LocationHistoryOpts) {
@@ -34,23 +24,14 @@ export class NodeRedFlowFactory {
 }
 
 export class NodeRedNodeFactory {
-  protected _global: NodeRedGlobalApi;
-  protected _flow: NodeRedFlowApi;
+  protected _global: NodeContextData;
+  protected _flow: NodeContextData;
   protected _env: NodeRedEnvApi;
 
-  constructor(global: NodeRedGlobalApi, flow: NodeRedFlowApi, env: NodeRedEnvApi) {
+  constructor(global: NodeContextData, flow: NodeContextData, env: NodeRedEnvApi) {
     this._global = global;
     this._flow = flow;
     this._env = env;
-  }
-
-  makeFanControl(node: NodeRedNodeApi): FanControl {
-    const contextApi: NodeRedContextApi = {
-      flow: this._flow,
-      env: this._env,
-      node: node
-    };
-    return new FanControl(this._global, contextApi);
   }
 
   makePingContext(node: NodeRedNodeApi, payload?: PingFlowInputPayload): PingContext {

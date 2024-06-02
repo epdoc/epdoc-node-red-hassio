@@ -1,0 +1,80 @@
+<p>A node to control a fan that is configured with a separate smart switch and
+  speed control. Because there is a separate on/off switch, the speed controller
+  may not be able to receive messages unless the fan is on. And so, to ensure the
+  fan receives the speed change messages, speed change messages are sent multiple
+  times after the fan is on. </p>
+<p>There is an additional <code>timeout</code> feature to allow fans to be
+  turned off after a specified duration.</p>
+
+<h3>Input Message</h3>
+
+<p>Fan control instructions may be input via the message payload, as shown in
+  this example. Any values that are set will override values set in the UI
+  console. </p>
+
+<pre>
+  <code>
+    { "server": "homeAssistant", "fan": "living_room", "instruction": "turn_on",
+    "delay": [ 1000, 2000 ], "shutoffEntityId":
+    "binary_sensor.living_room_disable", "debugEnabled": true }
+  </code>
+</pre>
+
+<p>Message payload properties are:</p>
+
+<dl class="message-properties">
+  <dt>server<span class="property-type">string</span></dt>
+  <dd>select the home assistant server. If there is only one server configured,
+    then this is the server that will be used.</dd>
+
+  <dt>fan <span class="property-type">string</span></dt>
+  <dd>short ID of the selected fan.</dd>
+
+  <dt>instruction <span class="property-type">string</span></dt>
+  <dd>One of <code>turn_on</code>, <code>turn_off</code>, <code>speed_1</code>,
+    ... <code>speed_6</code>.
+  </dd>
+
+  <dt class="optional">delay <span class="property-type">string</span></dt>
+  <dd>Array of millisecod delays, after fan is (turned) on, after which to send
+    the speed change instruction. Default array of delays is <code>[1000,
+      3000]</code>.</dd>
+
+  <dt class="optional">shutoffEntityId <span class="property-type">string</span></dt>
+  <dd>a binary entity that can be used to keep the fan from turning on. this can
+    be based on whether there is lightning or other electrical grid disturbances
+    in the area, for example.</dd>
+
+  <dt class="optional">timeout <span class="property-type">number</span></dt>
+  <dd>If this is a non-zero positive integer, and <code>instruction</code> is not
+    <code>turn_off</code>, the number of millseconds after which the fan will be
+    turned off.
+  </dd>
+
+  <dt class="optional">debugEnabled <span class="property-type">boolean</span></dt>
+  <dd>Enable debug messages to Node-RED debug.</dd>
+</dl>
+
+<p>If this node receives a new fan control instruction while it is still
+  executing a previous instruction, the earlier instruction(s) is immediatey
+  terminated. </p>
+
+<h3>Outputs</h3>
+
+<dl class="message-properties">
+  <dt>0<span class="property-type">message input</span></dt>
+  <dd>Contains the complete input message object</dd>
+
+  <dt>1 <span class="property-type">call service object</span></dt>
+  <dd>An object that should be sent to the input of a Home Assistant Call
+    Service node. Leave settings blank in the Call Service Node's UI console.</dd>
+</dl>
+
+
+
+<h3>Notes</h3>
+<ul>
+  <li>This node does not interface directy with home assistant. It can only
+    access Home Assistant state, and this is done using the global homeassistant
+    property as in <code>global.get('homeassistant')[&lt;SERVER&gt;]</code>.</li>
+</ul>
