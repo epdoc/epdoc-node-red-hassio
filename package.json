@@ -1,6 +1,6 @@
 {
   "name": "@epdoc/node-red-hassio",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Node-RED code for my own Home Assistant deployment",
   "private": false,
   "main": "dist/src/index.js",
@@ -31,7 +31,8 @@
     "format": "prettier --write 'src/**/*.ts' 'test/**/*.ts' '*.js' '*.json'",
     "docs": "./node_modules/typedoc/bin/typedoc",
     "test": "jest -t lower-case-node",
-    "patch": "rm -rf node_modules/@epdoc/node-red-hautil && cp -R /Users/jpravetz/dev/epdoc/node-red-hautil ./node_modules && echo Done."
+    "patch": "rm -rf node_modules/@epdoc/node-red-hautil && cp -R /Users/jpravetz/dev/epdoc/node-red-hautil ./node_modules && echo Done.",
+    "publish": "npm publish --access public"
   },
   "devDependencies": {
     "@rollup/plugin-typescript": "^11.1.5",
@@ -79,8 +80,8 @@
   "dependencies": {
     "@epdoc/timeutil": "^2.4.8",
     "@epdoc/typeutil": "^1.0.9",
-    "debug": "^4.3.5",
     "@epdoc/node-red-hautil": "^1.2.7",
+    "debug": "^4.3.5",
     "home-assistant-js-websocket": "^9.3.0",
     "node-red-contrib-home-assistant-websocket": "^0.64.0",
     "ws": "^8.17.0"

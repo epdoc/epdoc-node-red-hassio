@@ -1,4 +1,4 @@
-import { isError } from 'epdoc-util';
+import { isError } from '@epdoc/typeutil';
 import { NodeStatusFill, NodeStatusShape } from 'node-red';
 import { formatDate } from './datetime-format';
 import { BaseNode } from './types';

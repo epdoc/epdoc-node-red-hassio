@@ -1,4 +1,3 @@
-import { Milliseconds, durationUtil } from '@epdoc/timeutil';
 import {
   Entity,
   EntityId,
@@ -7,8 +6,9 @@ import {
   ServicePayload,
   newFanSpeed6Service,
   newSwitchService
-} from 'epdoc-node-red-hautil';
-import { isNonEmptyString } from 'epdoc-util';
+} from '@epdoc/node-red-hautil';
+import { Milliseconds, durationUtil } from '@epdoc/timeutil';
+import { isNonEmptyString } from '@epdoc/typeutil';
 import { NodeMessage } from 'node-red';
 import { MessageHandler } from '../message-handler';
 import { NodeDone, NodeSend } from '../nodes';

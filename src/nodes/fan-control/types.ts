@@ -1,6 +1,6 @@
+import { EntityShortId } from '@epdoc/node-red-hautil';
 import { Milliseconds } from '@epdoc/timeutil';
-import { EntityShortId } from 'epdoc-node-red-hautil';
-import { Dict, Integer, isNonEmptyString, pick } from 'epdoc-util';
+import { Dict, Integer, isNonEmptyString, pick } from '@epdoc/typeutil';
 import { BaseNodeConfig } from 'nodes/types';
 
 export type NumberAsString = string;

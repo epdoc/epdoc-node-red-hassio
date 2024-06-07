@@ -4,8 +4,8 @@ import {
   NodeRedFlowMock,
   NodeRedGlobalMock,
   NodeRedNodeMock
-} from 'epdoc-node-red-hautil';
-import { isArray, isObject } from 'epdoc-util';
+} from '@epdoc/node-red-hautil';
+import { isArray, isObject } from '@epdoc/typeutil';
 import { NodeRedFlowFactory, NodeRedNodeFactory } from '../src';
 import { PingContext, PingFlowInputPayload, PingNodeInputItem } from '../src/nodes/ping-test/ping-context';
 

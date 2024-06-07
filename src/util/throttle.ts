@@ -1,5 +1,5 @@
 import { Milliseconds } from '@epdoc/timeutil';
-import { isDict } from 'epdoc-util';
+import { isDict } from '@epdoc/typeutil';
 import debounce from './debounce';
 
 export type ThrottleOpts = {

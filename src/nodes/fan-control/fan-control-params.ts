@@ -1,5 +1,5 @@
+import { EntityId, EntityShortId, FanSpeed6Service, FanSpeed6Speed, isFanSpeed6Speed } from '@epdoc/node-red-hautil';
 import { Milliseconds, durationUtil } from '@epdoc/timeutil';
-import { EntityId, EntityShortId, FanSpeed6Service, FanSpeed6Speed, isFanSpeed6Speed } from 'epdoc-node-red-hautil';
 import {
   Integer,
   asFloat,
@@ -10,7 +10,7 @@ import {
   isNumber,
   isString,
   pick
-} from 'epdoc-util';
+} from '@epdoc/typeutil';
 import { FanControlInstruction, NumberAsString, TimeUnit } from './types';
 
 const REG = {

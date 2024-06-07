@@ -1,5 +1,5 @@
+import { FunctionNodeBase, NodeRedContextApi } from '@epdoc/node-red-hautil';
 import { DateUtil, EpochMilliseconds, Milliseconds, durationUtil, isEpochMilliseconds } from '@epdoc/timeutil';
-import { FunctionNodeBase, NodeRedContextApi } from 'epdoc-node-red-hautil';
 import {
   Dict,
   Integer,
@@ -10,7 +10,7 @@ import {
   isNonEmptyArray,
   isNonEmptyString,
   isString
-} from 'epdoc-util';
+} from '@epdoc/typeutil';
 import { NodeContextData } from 'node-red';
 
 const TIMEOUTS = [2500, 13000, 13000];

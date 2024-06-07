@@ -1,6 +1,13 @@
+import {
+  EntityId,
+  EntityShortId,
+  NodeDone,
+  NodeRedLogFunction,
+  NodeSend,
+  ServicePayload
+} from '@epdoc/node-red-hautil';
 import { Milliseconds } from '@epdoc/timeutil';
-import { EntityId, EntityShortId, NodeDone, NodeRedLogFunction, NodeSend, ServicePayload } from 'epdoc-node-red-hautil';
-import { isDict, isNonEmptyString, isPosInteger } from 'epdoc-util';
+import { isDict, isNonEmptyString, isPosInteger } from '@epdoc/typeutil';
 import { NodeContext, NodeContextData, NodeMessage } from 'node-red';
 import { OutputControllerConstructor } from 'nodes/output-controller';
 import { Status } from '../status';

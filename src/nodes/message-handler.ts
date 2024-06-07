@@ -1,5 +1,5 @@
 import { Milliseconds } from '@epdoc/timeutil';
-import { pad } from 'epdoc-util';
+import { pad } from '@epdoc/typeutil';
 import { NodeMessage } from 'node-red';
 import { NodeDone, NodeSend } from './nodes';
 import { Status } from './status';

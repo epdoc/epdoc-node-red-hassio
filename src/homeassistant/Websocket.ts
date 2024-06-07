@@ -25,7 +25,7 @@ import {
 } from 'home-assistant-js-websocket';
 // import { cloneDeep } from 'lodash';
 
-import { deepCopy } from 'epdoc-util';
+import { deepCopy } from '@epdoc/typeutil';
 import {
   HA_EVENT_AREA_REGISTRY_UPDATED,
   HA_EVENT_DEVICE_REGISTRY_UPDATED,

@@ -1,4 +1,4 @@
-import { NodeDone } from 'epdoc-node-red-hautil';
+import { NodeDone } from '@epdoc/node-red-hautil';
 import { NodeMessage } from 'node-red';
 import NodeRedContextService from './context-service';
 import { NodeEvent } from './events';

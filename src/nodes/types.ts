@@ -1,4 +1,4 @@
-import { Dict } from 'epdoc-util';
+import { Dict } from '@epdoc/typeutil';
 import { Node, NodeDef } from 'node-red';
 
 export interface NodeProperties extends NodeDef {

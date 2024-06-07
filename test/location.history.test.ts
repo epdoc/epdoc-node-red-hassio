@@ -4,8 +4,8 @@ import {
   NodeRedFlowMock,
   NodeRedGlobalMock,
   NodeRedNodeMock
-} from 'epdoc-node-red-hautil';
-import { Integer } from 'epdoc-util';
+} from '@epdoc/node-red-hautil';
+import { Integer } from '@epdoc/typeutil';
 import { NodeRedFlowFactory } from '../src';
 
 function g(i: Integer): string {

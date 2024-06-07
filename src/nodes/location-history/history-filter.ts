@@ -1,5 +1,5 @@
 import { EpochMilliseconds } from '@epdoc/timeutil';
-import { Integer, deepCopy, isArray, isNonEmptyArray } from 'epdoc-util';
+import { Integer, deepCopy, isArray, isNonEmptyArray } from '@epdoc/typeutil';
 import { HistoryLocation, LocationHistory, LocationHistoryItem, Person } from './location-history';
 
 export class HistoryFilter {

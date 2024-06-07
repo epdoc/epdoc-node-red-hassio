@@ -1,6 +1,6 @@
-import { Milliseconds } from 'epdoc-timeutil';
-import { delayPromise } from 'epdoc-util';
-import { HOST, PingNodeInputItem } from '../src/ping-context';
+import { Milliseconds } from '@epdoc/timeutil';
+import { delayPromise } from '@epdoc/typeutil';
+import { HOST, PingNodeInputItem } from '../src';
 
 // export type PingNodeOutputCb = (PingNodeOutputMsg) => {};
 export type PingNodeOutputMsg = {

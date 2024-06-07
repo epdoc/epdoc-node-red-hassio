@@ -1,4 +1,4 @@
-import { NodeDone } from 'epdoc-node-red-hautil';
+import { NodeDone } from '@epdoc/node-red-hautil';
 import EventEmitter from 'events';
 import { Node } from 'node-red';
 import { getErrorData } from './input-error-handler';

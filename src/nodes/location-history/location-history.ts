@@ -1,6 +1,6 @@
+import { ContextKey, FunctionNodeBase, NodeContextGlobalData, NodeRedContextApi } from '@epdoc/node-red-hautil';
 import { EpochMilliseconds } from '@epdoc/timeutil';
-import { ContextKey, FunctionNodeBase, NodeContextGlobalData, NodeRedContextApi } from 'epdoc-node-red-hautil';
-import { Dict, isArray } from 'epdoc-util';
+import { Dict, isArray } from '@epdoc/typeutil';
 import { HistoryFilter } from './history-filter';
 
 export type Person = string;

@@ -1,4 +1,4 @@
-import { NodeRedContextApi, NodeRedEnvApi, NodeRedNodeApi } from 'epdoc-node-red-hautil';
+import { NodeRedContextApi, NodeRedEnvApi, NodeRedNodeApi } from '@epdoc/node-red-hautil';
 import { NodeContextData } from 'node-red';
 import { LocationHistory, LocationHistoryOpts } from './nodes/location-history/location-history';
 import { PingContext, PingFlowInputPayload } from './nodes/ping-test/ping-context';

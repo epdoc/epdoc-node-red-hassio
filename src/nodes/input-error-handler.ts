@@ -1,6 +1,6 @@
-import { NodeDone } from 'epdoc-node-red-hautil';
-import { RED } from './globals';
+import { NodeDone } from '@epdoc/node-red-hautil';
 import BaseError from './BaseError';
+import { RED } from './globals';
 
 interface Dependencies {
   done?: NodeDone;

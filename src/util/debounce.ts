@@ -1,5 +1,5 @@
 import { EpochMilliseconds, Milliseconds } from '@epdoc/timeutil';
-import { isObject } from 'epdoc-util';
+import { isObject } from '@epdoc/typeutil';
 import root from './root';
 
 export type DebounceOpts = {
