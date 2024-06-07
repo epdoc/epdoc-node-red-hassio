@@ -46,5 +46,6 @@ See [the location history help page](./src/nodes/location-history/help.html).
 
 ## TODO
 
-- Learn how to communicate between the editor UI and underlying services to, for example, get the list of fans.
+- Learn how to communicate between the editor UI and underlying services to, for
+  example, get the list of fans that is available in global context.
 - Directly implement home assistant calls to do things like retrieve the list of fans

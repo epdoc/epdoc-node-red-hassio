@@ -2,14 +2,15 @@
   speed control. Because there is a separate on/off switch, the speed controller
   may not be able to receive messages unless the fan is on. And so, to ensure the
   fan receives the speed change messages, speed change messages are sent multiple
-  times after the fan is on. </p>
+  times after the fan is turned on. </p>
 <p>There is an additional <code>timeout</code> feature to allow fans to be
-  turned off after a specified duration.</p>
+  turned off after a specified duration. This timeout is not persisted across
+  server interuptions.</p>
 
 <h3>Input Message</h3>
 
 <p>Fan control instructions may be input via the message payload, as shown in
-  this example. Any values that are set will override values set in the UI
+  this example. Any and all values that are set will override values set in the UI
   console. </p>
 
 <pre>
@@ -56,8 +57,7 @@
 </dl>
 
 <p>If this node receives a new fan control instruction while it is still
-  executing a previous instruction, the earlier instruction(s) is immediatey
-  terminated. </p>
+  executing a previous instruction, the earlier instruction(s) is terminated. </p>
 
 <h3>Outputs</h3>
 
