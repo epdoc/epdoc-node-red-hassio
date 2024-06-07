@@ -1,5 +1,5 @@
 {
-  "name": "@epdoc/node-red-contrib-hassio",
+  "name": "@epdoc/node-red-hassio",
   "version": "1.0.2",
   "description": "Node-RED code for my own Home Assistant deployment",
   "private": false,
@@ -21,7 +21,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/epdoc/node-red-contrib-hassio.git"
+    "url": "https://github.com/epdoc/node-red-hassio.git"
   },
   "scripts": {
     "clean": "rm -rf dist docs coverage tmpBuildFiles && echo Done.",
