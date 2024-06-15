@@ -1,20 +1,35 @@
-let should = require('should');
-let helper = require('node-red-node-test-helper');
+import {
+  HA,
+  NodeRedContextApi,
+  NodeRedEnvMock,
+  NodeRedFlowMock,
+  NodeRedGlobalMock,
+  NodeRedNodeMock,
+  newHAFactory
+} from '@epdoc/node-red-hautil';
+import { NodeTestHelper } from 'node-red-node-test-helper';
+import { NodeRedFlowFactory } from '../src';
+import * as fanControlNode from '../src/nodes/fan-control/fan-control';
+import { FanControlNodeConfig } from '../src/nodes/fan-control/types';
+
+// let helper = require('node-red-node-test-helper');
 // import { NodeRedGlobalMock } from 'epdoc-node-red-hautil';
 // import helper from 'node-red-node-test-helper';
 // import fanControlNode from '../src/fan-control/fan-control-node';
-let fanControlNode = require('../dist/nodes/fan-control/fan-control-node');
+// let fanControlNode = require('../dist/src/nodes/fan-control/fan-control');
 
-// function fnSend(mock: NodeRedGlobalMock, payload: any) {
-//   console.log(`payload: ${JSON.stringify(payload)}`);
-//   if (payload.target && payload.target.entity_id) {
-//     if (payload.service === 'turn_on') {
-//       mock.setEntityStateValue(payload.target.entity_id, 'on');
-//     } else if (payload.service === 'turn_off') {
-//       mock.setEntityStateValue(payload.target.entity_id, 'off');
-//     }
-//   }
-// }
+function fnSend(mock: NodeRedGlobalMock, payload: any) {
+  console.log(`payload: ${JSON.stringify(payload)}`);
+  if (payload.target && payload.target.entity_id) {
+    if (payload.service === 'turn_on') {
+      mock.setEntityStateValue(payload.target.entity_id, 'on');
+    } else if (payload.service === 'turn_off') {
+      mock.setEntityStateValue(payload.target.entity_id, 'off');
+    }
+  }
+}
+
+const helper = new NodeTestHelper();
 helper.init(require.resolve('node-red'));
 // console.log(helper.hasOwnProperty('load'));
 // console.log(helper.hasOwnProperty('getNode'));
@@ -36,9 +51,7 @@ describe('fan-control node', () => {
       let n1 = helper.getNode('n1');
       try {
         expect(n1).toBeDefined();
-        console.log(JSON.stringify(n1));
-        n1.should.have.property('name', 'fan-control-node');
-        expect(n1.name).toEqual('fan-control-node');
+        expect(n1).toHaveProperty('name', 'fan-control');
         done();
       } catch (err) {
         done(err);
@@ -47,17 +60,21 @@ describe('fan-control node', () => {
   }, 1000);
 });
 
-/*
+
 describe('fan-control Node', () => {
   describe('lightning on', () => {
     const gMock = new NodeRedGlobalMock();
+    // @ts-ignore
     const oMock: NodeRedContextApi = {
       env: new NodeRedEnvMock(),
-      flow: new NodeRedFlowMock(),
+     // @ts-ignore
+     flow: new NodeRedFlowMock(),
       node: new NodeRedNodeMock()
     };
+    // @ts-ignore
     const factory = new NodeRedFlowFactory(gMock);
-    const haFactory = new HAFactory(gMock);
+    // @ts-ignore
+    const haFactory =  newHAFactory(gMock);
     gMock
       .setEntity('input_boolean.lightning', {
         entity_id: 'input_boolean.lightning',
@@ -83,6 +100,9 @@ describe('fan-control Node', () => {
     let fanCtrl = factory.makeFanControl(oMock);
 
     it('turn off', (done) => {
+      const config:FanControlNodeConfig = {
+        server: 'xxx'
+      }
       const params = {
         fan: 'away_room',
         service: 'on',
@@ -110,11 +130,14 @@ describe('fan-control Node', () => {
   });
   describe('entity data', () => {
     const gMock = new NodeRedGlobalMock();
-    const haFactory = new HAFactory(gMock);
+    // @ts-ignore
+    const haFactory = newHAFactory(gMock);
+    // @ts-ignore
     const factory = new NodeRedFlowFactory(gMock);
     const oMock: NodeRedContextApi = {
       env: new NodeRedEnvMock(),
-      flow: new NodeRedFlowMock(),
+    // @ts-ignore
+    flow: new NodeRedFlowMock(),
       node: new NodeRedNodeMock()
     };
     gMock
@@ -149,11 +172,14 @@ describe('fan-control Node', () => {
   });
   describe('entity data', () => {
     const gMock = new NodeRedGlobalMock();
-    const haFactory = new HAFactory(gMock);
+    // @ts-ignore
+    const haFactory = newHAFactory(gMock);
+    // @ts-ignore
     const factory = new NodeRedFlowFactory(gMock);
     const oMock: NodeRedContextApi = {
       env: new NodeRedEnvMock(),
-      flow: new NodeRedFlowMock(),
+    // @ts-ignore
+    flow: new NodeRedFlowMock(),
       node: new NodeRedNodeMock()
     };
     gMock.setStates({
@@ -195,4 +221,4 @@ describe('fan-control Node', () => {
         });
     }, 1000);
   });
-  */
+  

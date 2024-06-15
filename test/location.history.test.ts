@@ -14,9 +14,11 @@ function g(i: Integer): string {
 
 describe('LocationHistory', () => {
   const gMock: NodeRedGlobalMock = new NodeRedGlobalMock();
+  // @ts-ignore
   const factory = new NodeRedFlowFactory(gMock);
   const oMock: NodeRedContextApi = {
     env: new NodeRedEnvMock(),
+    // @ts-ignore
     flow: new NodeRedFlowMock(),
     node: new NodeRedNodeMock()
   };
@@ -25,7 +27,7 @@ describe('LocationHistory', () => {
   const LOCATIONS = [];
 
   describe('basic', () => {
-    let history = factory.makieLocationHistory(oMock, { context: 'flow' });
+    let history = factory.makeLocationHistory(oMock, { context: 'flow' });
     it('find none', () => {
       let f = history.filter('bob');
       expect(f.found()).toEqual(false);
@@ -192,6 +194,8 @@ describe('LocationHistory', () => {
       history.flush();
       const h = oMock.flow.get('gate_history');
       expect(h).toBeDefined();
+      expect(h).toHaveProperty('bob');
+      // @ts-ignore
       expect(h.bob).toHaveLength(2);
     });
     it('read', () => {
@@ -200,6 +204,8 @@ describe('LocationHistory', () => {
       history.read();
       const h = oMock.flow.get('gate_history');
       expect(h).toBeDefined();
+      expect(h).toHaveProperty('bob');
+      // @ts-ignore
       expect(h.bob).toHaveLength(2);
       let f = history
         .filter('bob')

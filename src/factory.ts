@@ -14,6 +14,10 @@ export class NodeRedFlowFactory {
     this._global = global;
   }
 
+  makeFanControl(contextApi: NodeRedContextApi, opts?: LocationHistoryOpts) {
+    return new LocationHistory(this._global, contextApi, opts);
+  }
+
   makieLocationHistory(contextApi: NodeRedContextApi, opts?: LocationHistoryOpts) {
     return new LocationHistory(this._global, contextApi, opts);
   }

@@ -14,9 +14,11 @@ describe('ping-context', () => {
     const gMock: NodeRedGlobalMock = new NodeRedGlobalMock();
     const oMock: NodeRedContextApi = {
       env: new NodeRedEnvMock(),
+      // @ts-ignore
       flow: new NodeRedFlowMock(),
       node: new NodeRedNodeMock()
     };
+    // @ts-ignore
     const pingFactory: NodeRedNodeFactory = new NodeRedNodeFactory(gMock, oMock.flow, oMock.env);
     const input: PingFlowInputPayload = {
       id: 'mytest',
@@ -101,9 +103,11 @@ describe('ping-context', () => {
     const gMock: NodeRedGlobalMock = new NodeRedGlobalMock();
     const oMock: NodeRedContextApi = {
       env: new NodeRedEnvMock(),
+      // @ts-ignore
       flow: new NodeRedFlowMock(),
       node: new NodeRedNodeMock()
     };
+    // @ts-ignore
     const pingFactory: NodeRedFlowFactory = new NodeRedFlowFactory(gMock);
 
     const input: PingFlowInputPayload = {

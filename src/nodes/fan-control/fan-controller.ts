@@ -45,6 +45,15 @@ type FanControlLogFunctions = {
   debug: NodeRedLogFunction;
 };
 
+/**
+ * Object that does the work for a fan-control node. 
+ *
+ * Initialized with FanControllerConstructor object which contains context
+ * information.
+ * 
+ * Called (run) whenenver a new message is received.
+ });
+ */
 export class FanController {
   protected _node: FanControlNode;
   protected _status: Status;
@@ -52,6 +61,10 @@ export class FanController {
   protected params: FanControlParams = new FanControlParams();
   protected handlers: FanMessageHandler[] = [];
 
+  /**
+   *
+   * @param params Contains context information for the node
+   */
   constructor(params: FanControllerConstructor) {
     this._node = params.node;
     this._status = new Status(params.node);
@@ -67,6 +80,35 @@ export class FanController {
 
   get debugEnabled(): boolean {
     return this._node.config.debugEnabled === true;
+  }
+
+  /**
+   * Custom Node-RED function code for controlling a fan where (i) the fan on/off
+   * is controlled by a switch (ii) the fan speed is controlled by a Bond Bridge
+   * that sends out RF signals to the fan. Supports reading the state of an input
+   * boolean that will keep the fan off. This can be used, for example, when there
+   * is a lightning storm and you wish to keep the fan switched off at it's
+   * switch.
+   */
+  async run(msg: NodeMessage, send: NodeSend, done: NodeDone): Promise<void> {
+    this.handlers.forEach((handler) => {
+      handler.stop();
+    });
+    this.handlers = [];
+    if (isFanControlPayload(msg.payload)) {
+      this.setPayloadConfig(msg.payload);
+    }
+    let handler: FanMessageHandler = new FanMessageHandler(this._node, msg, send, done, {
+      params: new FanControlParams(this.params)
+    });
+    this.handlers.push(handler);
+    return handler
+      .init()
+      .run()
+      .then((resp) => {
+        handler.stop();
+        this.removeHandler(handler);
+      });
   }
 
   getFanList(): FanListItem[] {
@@ -109,35 +151,6 @@ export class FanController {
       }
     }
     return this;
-  }
-
-  /**
-   * Custom Node-RED function code for controlling a fan where (i) the fan on/off
-   * is controlled by a switch (ii) the fan speed is controlled by a Bond Bridge
-   * that sends out RF signals to the fan. Supports reading the state of an input
-   * boolean that will keep the fan off. This can be used, for example, when there
-   * is a lightning storm and you wish to keep the fan switched off at it's
-   * switch.
-   */
-  async run(msg: NodeMessage, send: NodeSend, done: NodeDone): Promise<void> {
-    this.handlers.forEach((handler) => {
-      handler.stop();
-    });
-    this.handlers = [];
-    if (isFanControlPayload(msg.payload)) {
-      this.setPayloadConfig(msg.payload);
-    }
-    let handler: FanMessageHandler = new FanMessageHandler(this._node, msg, send, done, {
-      params: new FanControlParams(this.params)
-    });
-    this.handlers.push(handler);
-    return handler
-      .init()
-      .run()
-      .then((resp) => {
-        handler.stop();
-        this.removeHandler(handler);
-      });
   }
 
   removeHandler(handler: FanMessageHandler): this {

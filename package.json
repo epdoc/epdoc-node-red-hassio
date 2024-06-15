@@ -1,6 +1,6 @@
 {
   "name": "@epdoc/node-red-hassio",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Node-RED code for my own Home Assistant deployment",
   "private": false,
   "main": "dist/src/index.js",
@@ -11,7 +11,9 @@
     "version": ">=3.0.0",
     "nodes": {
       "fan-control": "./dist/src/nodes/fan-control/fan-control.js",
-      "lower-case": "./dist/src/nodes/lower-case/lower-case.js"
+      "lower-case": "./dist/src/nodes/lower-case/lower-case.js",
+      "ping-test": "./dist/src/nodes/lower-case/ping-test.js",
+      "location-history": "./dist/src/nodes/lower-case/location-history.js"
     }
   },
   "license": "MIT",
@@ -30,7 +32,7 @@
     "x-copy": "copyfiles './src/**/*.{css,svg}' './dist/'",
     "format": "prettier --write 'src/**/*.ts' 'test/**/*.ts' '*.js' '*.json'",
     "docs": "./node_modules/typedoc/bin/typedoc",
-    "test": "jest -t lower-case-node",
+    "test": "jest ",
     "patch": "rm -rf node_modules/@epdoc/node-red-hautil && cp -R /Users/jpravetz/dev/epdoc/node-red-hautil ./node_modules && echo Done.",
     "publish": "npm publish --access public"
   },
@@ -80,7 +82,7 @@
   "dependencies": {
     "@epdoc/timeutil": "^2.4.8",
     "@epdoc/typeutil": "^1.0.9",
-    "@epdoc/node-red-hautil": "^1.2.7",
+    "@epdoc/node-red-hautil": "^1.2.5",
     "debug": "^4.3.5",
     "home-assistant-js-websocket": "^9.3.0",
     "node-red-contrib-home-assistant-websocket": "^0.64.0",

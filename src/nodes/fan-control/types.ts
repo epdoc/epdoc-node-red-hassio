@@ -51,6 +51,9 @@ export enum FanControlInstruction {
 //   return result;
 // }
 
+/**
+ * Parameters that can be set in the UI of the Node.
+ */
 export interface FanControlNodeConfig extends BaseNodeConfig {
   server: string;
   fan: EntityShortId;

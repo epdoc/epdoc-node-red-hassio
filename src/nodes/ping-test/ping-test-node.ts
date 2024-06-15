@@ -1,47 +1,41 @@
 import { NodeDone, NodeSend } from '@epdoc/node-red-hautil';
 import { NodeMessage } from 'node-red';
+import NodeRedContextService from '../context-service';
 import { RED } from '../globals';
 import { createControllerDependencies } from '../helpers';
+import TypedInputService from '../typed-input-service';
 import { BaseNode } from '../types';
-import { FanController, FanControllerConstructor } from './fan-controller';
-import { FanControlNodeConfig } from './types';
+import { PingTestController, PingTestControllerConstructor } from './ping-test-controller';
+import { PingTestNodeConfig } from './types';
 
-export interface FanControlNode extends BaseNode {
-  config: FanControlNodeConfig;
+export interface PingTestNode extends BaseNode {
+  config: PingTestNodeConfig;
 }
 
-/**
- * Function is passed to Node-RED and is called whenever a new instance of the
- * node is created. Created a FanController instance, which handles any input
- * messages by calling the FanController's run method.
- * @param this
- * @param config Node-specifid properties set in the flow editor (e.g. fanId,
- * on/off, speed, server). How is this used, since our settings come in via a
- * message?
- */
-export function createFanControlNode(this: FanControlNode, config: FanControlNodeConfig) {
-  console.log(`Creating fan-control node with config: ${JSON.stringify(config)}`);
-  console.log(`Creating fan-control node with config: ${JSON.stringify(config)}`);
-
-  // @ts-ignore Initialize the features shared by all nodes
+export function createPingTestNode(this: PingTestNode, config: PingTestNodeConfig) {
+  // console.log(`Starting ping-test with config: ${JSON.stringify(config)}`);
+  // console.log(`Starting ping-test with opts: ${JSON.stringify(Object.keys(opts))} config: ${JSON.stringify(config)}`);
+  // @ts-ignore
   RED.nodes.createNode(this, config);
   this.config = config;
   // @ts-ignore
-  let node: FanControlNode = this as FanControlNode;
+  let node: PingTestNode = this as PingTestNode;
 
-  // node.log(`fan-control config: ${JSON.stringify(toFanControlNodeConfig(config))}`);
+  // node.log(`ping-test config: ${JSON.stringify(toPingTestNodeConfig(config))}`);
 
   // const status = new Status({ node: node });
 
   // const nodeRedContextService = new NodeRedContextService(node);
+  const controllerDeps = createControllerDependencies(this);
 
-  // Helper routine to create dependencies for our controller
-  const deps = createControllerDependencies(this);
-
-  const params: FanControllerConstructor = {
+  const contextService = new NodeRedContextService(this);
+  const params: PingTestControllerConstructor = {
     node: node,
-    contextService: deps.nodeRedContextService,
-    typedInputService: deps.typedInputService
+    contextService: contextService,
+    typedInputService: new TypedInputService({
+      nodeConfig: node.config,
+      context: contextService
+    })
   };
 
   // params.node.on(NodeEvent.Input, (p) => {
@@ -55,19 +49,18 @@ export function createFanControlNode(this: FanControlNode, config: FanControlNod
   // node.log(`flow keys = ${JSON.stringify(flowContext.keys())}`);
   // node.log(`global keys = ${JSON.stringify(globalContext.keys())}`);
 
-  // Use a controller to do the grunt work
-  const controller = new FanController(params);
+  const tester = new PingTestController(params);
 
   const processMsg = async (msg: NodeMessage, send: NodeSend, done: NodeDone) => {
     try {
-      controller.run(msg, send, done);
-      // node.log(`Processing fan-control message: ${msg.payload}`);
+      tester.run(msg, send, done);
+      // node.log(`Processing ping-test message: ${msg.payload}`);
 
       // node.log(`config: ${JSON.stringify(config)}`);
-      // msg.payload = 'Processed fan-control message';
+      // msg.payload = 'Processed ping-test message';
       // fanCtrl.setMessage(msg, send, done);
       send(msg);
-      // const fanCtrl = new FanController(node, msg, send, done);
+      // const fanCtrl = new PingTestController(node, msg, send, done);
       // fanCtrl.setUiConfig(config);
       // fanCtrl.setPayloadConfig(msg.payload);
       // fanCtrl.run().then((resp) => {
@@ -84,10 +77,9 @@ export function createFanControlNode(this: FanControlNode, config: FanControlNod
   // });
 
   const done = () => {
-    node.log('fan-control done');
+    node.log('ping-test done');
   };
 
-  // Register a listener that gets called whenever a message arrives at the node
   node.on('input', processMsg);
   // node.on('close', done);
 }
