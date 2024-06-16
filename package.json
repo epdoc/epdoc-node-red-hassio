@@ -1,6 +1,6 @@
 {
   "name": "@epdoc/node-red-hassio",
-  "version": "1.0.4",
+  "version": "1.0.7",
   "description": "Node-RED code for my own Home Assistant deployment",
   "private": false,
   "main": "dist/src/index.js",
@@ -12,8 +12,7 @@
     "nodes": {
       "fan-control": "./dist/src/nodes/fan-control/fan-control.js",
       "lower-case": "./dist/src/nodes/lower-case/lower-case.js",
-      "ping-test": "./dist/src/nodes/lower-case/ping-test.js",
-      "location-history": "./dist/src/nodes/lower-case/location-history.js"
+      "ping-test": "./dist/src/nodes/lping-test/ping-test.js"
     }
   },
   "license": "MIT",
@@ -80,7 +79,7 @@
     "typescript": "^5.4.5"
   },
   "dependencies": {
-    "@epdoc/timeutil": "^2.4.8",
+    "@epdoc/timeutil": "^2.4.10",
     "@epdoc/typeutil": "^1.0.9",
     "@epdoc/node-red-hautil": "^1.2.5",
     "debug": "^4.3.5",
