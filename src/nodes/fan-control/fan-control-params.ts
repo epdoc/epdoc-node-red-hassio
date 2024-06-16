@@ -1,6 +1,7 @@
 import { EntityId, EntityShortId, FanSpeed6Service, FanSpeed6Speed, isFanSpeed6Speed } from '@epdoc/node-red-hautil';
 import { Milliseconds, durationUtil } from '@epdoc/timeutil';
 import {
+  Dict,
   Integer,
   asFloat,
   asInt,
@@ -11,7 +12,7 @@ import {
   isString,
   pick
 } from '@epdoc/typeutil';
-import { FanControlInstruction, NumberAsString, TimeUnit } from './types';
+import { FanControlInstruction, FanControlNodeConfig, NumberAsString, TimeUnit, isFanControlNodeConfig } from './types';
 
 const REG = {
   onoff: new RegExp(/^(on|off)$/, 'i'),
@@ -35,7 +36,7 @@ export class FanControlParams {
   public retryDelay: Milliseconds[] = [1000, 3000];
   public shutoffEntityId: EntityId;
 
-  constructor(params?: FanControlParams) {
+  constructor(config: Partial<FanControlNodeConfig> = {}, params: Partial<FanControlParams> = {}) {
     if (FanControlParams.isInstance(params)) {
       this.server = params.server;
       this.debugEnabled = params.debugEnabled;

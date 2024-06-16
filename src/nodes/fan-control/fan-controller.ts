@@ -55,7 +55,9 @@ type FanControlLogFunctions = {
  });
  */
 export class FanController {
+  // Contains _node.node (this), _node.node.config (instance config), contexts.
   protected _node: FanControlNode;
+
   protected _status: Status;
   protected _context: NodeContext;
   protected params: FanControlParams = new FanControlParams();
@@ -68,6 +70,7 @@ export class FanController {
   constructor(params: FanControllerConstructor) {
     this._node = params.node;
     this._status = new Status(params.node);
+    // Apply our UI settings to our params
     this.setFanControlConfig(params.node.config);
   }
 
@@ -76,6 +79,10 @@ export class FanController {
   }
   get flow(): NodeContextData {
     return this._node.context().flow;
+  }
+
+  get config(): FanControlNodeConfig {
+    return this._node.config;
   }
 
   get debugEnabled(): boolean {
@@ -95,11 +102,13 @@ export class FanController {
       handler.stop();
     });
     this.handlers = [];
+    // Apply our message properties to params
     if (isFanControlPayload(msg.payload)) {
       this.setPayloadConfig(msg.payload);
     }
+    // Create and manage a handler for this message
     let handler: FanMessageHandler = new FanMessageHandler(this._node, msg, send, done, {
-      params: new FanControlParams(this.params)
+      params: this.params
     });
     this.handlers.push(handler);
     return handler

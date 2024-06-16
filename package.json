@@ -12,7 +12,7 @@
     "nodes": {
       "fan-control": "./dist/src/nodes/fan-control/fan-control.js",
       "lower-case": "./dist/src/nodes/lower-case/lower-case.js",
-      "ping-test": "./dist/src/nodes/lping-test/ping-test.js"
+      "ping-test": "./dist/src/nodes/ping-test/ping-test.js"
     }
   },
   "license": "MIT",
@@ -73,7 +73,6 @@
     "node-sass": "^9.0.0",
     "prettier": "^3.3.0",
     "rimraf": "^5.0.7",
-    "should": "^13.2.3",
     "through2": "^4.0.2",
     "ts-jest": "^29.1.1",
     "typescript": "^5.4.5"
@@ -81,7 +80,7 @@
   "dependencies": {
     "@epdoc/timeutil": "^2.4.10",
     "@epdoc/typeutil": "^1.0.9",
-    "@epdoc/node-red-hautil": "^1.2.5",
+    "@epdoc/node-red-hautil": "file:../node-red-hautil",
     "debug": "^4.3.5",
     "home-assistant-js-websocket": "^9.3.0",
     "node-red-contrib-home-assistant-websocket": "^0.64.0",

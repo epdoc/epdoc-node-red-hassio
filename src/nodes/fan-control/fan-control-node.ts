@@ -11,13 +11,13 @@ export interface FanControlNode extends BaseNode {
 }
 
 /**
- * Function is passed to Node-RED and is called whenever a new instance of the
- * node is created. Created a FanController instance, which handles any input
- * messages by calling the FanController's run method.
- * @param this
- * @param config Node-specifid properties set in the flow editor (e.g. fanId,
- * on/off, speed, server). How is this used, since our settings come in via a
- * message?
+ * Function is called whenever a new instance of the node is created, along with
+ * any config that is set in the UI. Creates a FanController instance, which
+ * handles any input messages by calling the FanController's run method.
+ * @param this The object that Node-RED keeps track of and uses to access this
+ * Node.
+ * @param config The instance properties set in the flow editor (e.g. fanId,
+ * on/off, speed, server).
  */
 export function createFanControlNode(this: FanControlNode, config: FanControlNodeConfig) {
   console.log(`Creating fan-control node with config: ${JSON.stringify(config)}`);

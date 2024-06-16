@@ -15,6 +15,7 @@ import { NodeDone, NodeSend } from '../nodes';
 import { BaseNode } from '../types';
 import { FanControlNode } from './fan-control-node';
 import { FanControlParams } from './fan-control-params';
+import { FanControlNodeConfig } from './types';
 
 export type FanMessageHandlerOpts = {
   params: FanControlParams;
@@ -76,6 +77,10 @@ export class FanMessageHandler extends MessageHandler {
     return super.stop();
   }
 
+  get config(): FanControlNodeConfig {
+    return this.node.config;
+  }
+
   isValid(): boolean {
     return Entity.isEntity(this.fan()) && Entity.isEntity(this.switch());
   }
@@ -90,7 +95,7 @@ export class FanMessageHandler extends MessageHandler {
   }
 
   get fanId(): EntityId {
-    return this.fan().entityId || 'undefined';
+    return this.fan().entityId || this.config.fan || 'undefined';
   }
 
   switch(): Entity {
