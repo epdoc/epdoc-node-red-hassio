@@ -21,7 +21,6 @@ export interface FanControlNode extends BaseNode {
  */
 export function createFanControlNode(this: FanControlNode, config: FanControlNodeConfig) {
   console.log(`Creating fan-control node with config: ${JSON.stringify(config)}`);
-  console.log(`Creating fan-control node with config: ${JSON.stringify(config)}`);
 
   // @ts-ignore Initialize the features shared by all nodes
   RED.nodes.createNode(this, config);
@@ -29,8 +28,9 @@ export function createFanControlNode(this: FanControlNode, config: FanControlNod
   // @ts-ignore
   let node: FanControlNode = this as FanControlNode;
 
-  // node.log(`fan-control config: ${JSON.stringify(toFanControlNodeConfig(config))}`);
-
+  // if (config.debugEnabled) {
+  //   node.log(`fan-control config: ${JSON.stringify(toFanControlNodeConfig(config))}`);
+  // }
   // const status = new Status({ node: node });
 
   // const nodeRedContextService = new NodeRedContextService(node);

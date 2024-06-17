@@ -1,7 +1,6 @@
 import { EntityId, EntityShortId, FanSpeed6Service, FanSpeed6Speed, isFanSpeed6Speed } from '@epdoc/node-red-hautil';
 import { Milliseconds, durationUtil } from '@epdoc/timeutil';
 import {
-  Dict,
   Integer,
   asFloat,
   asInt,
@@ -12,7 +11,7 @@ import {
   isString,
   pick
 } from '@epdoc/typeutil';
-import { FanControlInstruction, FanControlNodeConfig, NumberAsString, TimeUnit, isFanControlNodeConfig } from './types';
+import { FanControlInstruction, FanControlNodeConfig, NumberAsString, TimeUnit } from './types';
 
 const REG = {
   onoff: new RegExp(/^(on|off)$/, 'i'),
@@ -56,7 +55,7 @@ export class FanControlParams {
   setServer(val: any): this {
     if (isNonEmptyString(val)) {
       this.server = val.replace(/\s+/, '');
-      this.server = this.server.charAt(0).toLowerCase() + this.server.slice(1);
+      // this.server = this.server.charAt(0).toLowerCase() + this.server.slice(1);
     }
     return this;
   }
