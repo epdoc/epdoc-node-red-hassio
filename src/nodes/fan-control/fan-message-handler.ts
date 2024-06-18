@@ -24,6 +24,10 @@ type FanControlLogFunctions = {
   debug: NodeRedLogFunction;
 };
 
+/**
+ * Created for each new message that comes in.
+ *
+ */
 export class FanMessageHandler extends MessageHandler {
   protected step = 0;
   protected node: FanControlNode;
@@ -144,7 +148,7 @@ export class FanMessageHandler extends MessageHandler {
           .then((resp) => {
             ++this.step;
             this.log.debug(`${this.switchId} set-speed delay ${delay} ms`);
-            this.status.append(`waiting ${durationUtil(delay).format()}`).update();
+            this.status.append(`waiting ${durationUtil(delay, 'hms').format()}`).update();
             return this.promiseDelay(delay);
           })
           .then((resp) => {
@@ -200,7 +204,7 @@ export class FanMessageHandler extends MessageHandler {
       .then((resp) => {
         ++this.step;
         this.log.debug(`${this.switchId} is ${this.switch().state()}`);
-        this.log.debug(`Shutoff (lightning) is ${this.shutoff}`);
+        this.log.debug(`Shutoff override is ${this.shutoff}`);
         if (this.switch().isOn()) {
           if (this.params.shouldTurnOff()) {
             this.turnOff('fan was on');

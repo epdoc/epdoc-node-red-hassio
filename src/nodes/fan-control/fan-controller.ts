@@ -7,14 +7,14 @@ import {
   ServicePayload
 } from '@epdoc/node-red-hautil';
 import { Milliseconds } from '@epdoc/timeutil';
-import { isDict, isNonEmptyString, isPosInteger } from '@epdoc/typeutil';
+import { isDict, isNonEmptyString } from '@epdoc/typeutil';
 import { NodeContext, NodeContextData, NodeMessage } from 'node-red';
 import { OutputControllerConstructor } from 'nodes/output-controller';
 import { Status } from '../status';
 import { FanControlNode } from './fan-control-node';
 import { FanControlParams } from './fan-control-params';
 import { FanMessageHandler } from './fan-message-handler';
-import { FanControlInstruction, FanControlNodeConfig, isFanControlNodeConfig } from './types';
+import { FanControlInstruction, FanControlNodeConfig } from './types';
 
 const REG = {
   onoff: new RegExp(/^(on|off)$/, 'i'),
@@ -60,7 +60,6 @@ export class FanController {
 
   protected _status: Status;
   protected _context: NodeContext;
-  protected params: FanControlParams = new FanControlParams();
   protected handlers: FanMessageHandler[] = [];
 
   /**
@@ -71,7 +70,6 @@ export class FanController {
     this._node = params.node;
     this._status = new Status(params.node);
     // Apply our UI settings to our params
-    this.setFanControlConfig(params.node.config);
   }
 
   get global(): NodeContextData {
@@ -98,17 +96,29 @@ export class FanController {
    * switch.
    */
   async run(msg: NodeMessage, send: NodeSend, done: NodeDone): Promise<void> {
+    // Stop any previous message handlers that are running for this Node instance
     this.handlers.forEach((handler) => {
       handler.stop();
     });
     this.handlers = [];
+
+    // Create a new params object for this message and set properties from this
+    // Node instance.
+    let params: FanControlParams = new FanControlParams();
+    params.applyInstanceConfig(this._node.config);
+
     // Apply our message properties to params
     if (isFanControlPayload(msg.payload)) {
-      this.setPayloadConfig(msg.payload);
+      params.applyMessagePayload(msg.payload);
     }
+
+    if (params.debugEnabled) {
+      this._node.log(`Input params: ${JSON.stringify(params.toData())}`);
+    }
+
     // Create and manage a handler for this message
     let handler: FanMessageHandler = new FanMessageHandler(this._node, msg, send, done, {
-      params: this.params
+      params: params
     });
     this.handlers.push(handler);
     return handler
@@ -120,46 +130,13 @@ export class FanController {
       });
   }
 
+  /**
+   * Not used. We'd like it to be, so it could be used to populate the UI. But I
+   * don't know how to get data up to the js that is running in the editor.
+   * @returns
+   */
   getFanList(): FanListItem[] {
     return this.global.get('fan_control_fan_list') as FanListItem[];
-  }
-
-  setFanControlConfig(config?: FanControlNodeConfig): this {
-    if (isFanControlNodeConfig(config)) {
-      this.params
-        .setServer(config.server)
-        .setDebug(config.debugEnabled)
-        .setFan(config.fan)
-        .setInstruction(config.instruction)
-        .setSpeed(config.setSpeed, config.speed)
-        .setTimeout(config.timeoutEnabled, config.for, config.forUnits);
-      // if (config.setSpeed === true && isFanSpeed6Speed(config.speed)) {
-      //   this.params.setInstruction(fanControlSpeedToInstruction(config.speed));
-      // }
-
-      // this.initBeforeRun();
-    }
-    // console.log(`setUiConfig/global ${JSON.stringify(this.global)}`);
-    return this;
-  }
-
-  setPayloadConfig(params?: any): this {
-    if (isFanControlPayload(params)) {
-      this.params
-        .setServer(params.server)
-        .setDebug(params.debugEnabled)
-        .setFan(params.fan)
-        .setShutoff(params.shutOffEntityId)
-        .setInstruction(params.instruction)
-        .setDelay(params.delay)
-        .setTimeout(isPosInteger(params.timeout), params.timeout);
-
-      if (this.params.debugEnabled) {
-        this._node.log(`Input params: ${JSON.stringify(params)}`);
-        this._node.log(this.params.toString());
-      }
-    }
-    return this;
   }
 
   removeHandler(handler: FanMessageHandler): this {

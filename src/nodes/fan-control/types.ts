@@ -15,41 +15,6 @@ export enum FanControlInstruction {
   Speed5 = 'speed_5',
   Speed6 = 'speed_6'
 }
-// export function fanControlSpeedToInstruction(speed: any): FanControlInstruction {
-//   if (isPosInteger(speed) && speed <= 6) {
-//     return ('speed_' + String(speed)) as FanControlInstruction;
-//   }
-//   return FanControlInstruction.Speed2;
-// }
-
-// const REG = {
-//   speedInst: new RegExp(/^speed_(\d)$/)
-// };
-// export function fanControlInstructionToSpeed(inst: FanControlInstruction): FanSpeed6Speed {
-//   const p = inst.match(REG.speedInst);
-//   if (p && p.length > 1) {
-//     return asInt(p[1]);
-//   }
-//   return -1;
-// }
-
-// export type FanControlNodeInst = {
-//   service: 'turn_on' | 'turn_off';
-//   speed?: Integer;
-// };
-
-// export function fanControlInstructionMap(inst: FanControlInstruction) {
-//   let result: FanControlNodeInst = { service: 'turn_on' };
-//   if (inst === FanControlInstruction.TurnOn) {
-//     return result;
-//   }
-//   if (inst === FanControlInstruction.TurnOff) {
-//     result.service = 'turn_off';
-//     return result;
-//   }
-//   result.speed = asInt(inst);
-//   return result;
-// }
 
 /**
  * Parameters that can be set in the UI of the Node.
@@ -107,3 +72,11 @@ export enum TimeUnit {
   Hours = 'hours',
   Days = 'days'
 }
+
+export const TimeUnitMultiplier: Record<TimeUnit, Integer> = {
+  milliseconds: 1,
+  seconds: 1000,
+  minutes: 60 * 1000,
+  hours: 3600 * 1000,
+  days: 24 * 3600 * 1000
+};

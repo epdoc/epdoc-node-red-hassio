@@ -1,17 +1,18 @@
 import { EntityId, EntityShortId, FanSpeed6Service, FanSpeed6Speed, isFanSpeed6Speed } from '@epdoc/node-red-hautil';
 import { Milliseconds, durationUtil } from '@epdoc/timeutil';
 import {
-  Integer,
+  Dict,
   asFloat,
   asInt,
-  isDefined,
+  isBoolean,
   isNonEmptyArray,
   isNonEmptyString,
   isNumber,
+  isPosInteger,
   isString,
   pick
 } from '@epdoc/typeutil';
-import { FanControlInstruction, FanControlNodeConfig, NumberAsString, TimeUnit } from './types';
+import { FanControlInstruction, FanControlNodeConfig, TimeUnit, TimeUnitMultiplier } from './types';
 
 const REG = {
   onoff: new RegExp(/^(on|off)$/, 'i'),
@@ -28,6 +29,7 @@ export class FanControlParams {
   public server: string;
   public debugEnabled = false;
   public shortId: EntityShortId;
+  public _setSpeed: boolean = false;
   public speed: FanSpeed6Speed = 0;
   public service: FanControlInstruction.TurnOn | FanControlInstruction.TurnOff = FanControlInstruction.TurnOff;
   // public bOn: boolean = false;
@@ -93,8 +95,10 @@ export class FanControlParams {
   setSpeed(enable: boolean, speed: any | undefined): this {
     const sp = asInt(speed);
     if (enable && isFanSpeed6Speed(sp)) {
+      this._setSpeed = true;
       this.speed = sp;
       if (this.speed === 0) {
+        this._setSpeed = false;
         return this.off();
       }
       // } else if (enable === false) {
@@ -132,25 +136,18 @@ export class FanControlParams {
     return this;
   }
 
-  setTimeout(
-    enable: boolean,
-    val: NumberAsString | Integer | undefined,
-    units: TimeUnit = TimeUnit.Milliseconds
-  ): this {
-    if (enable && isDefined(val)) {
-      const t = asInt(val);
-      if (units === TimeUnit.Milliseconds) {
-        this.timeout = t;
-      } else if (units === TimeUnit.Seconds) {
-        this.timeout = t * 1000;
-      } else if (units === TimeUnit.Minutes) {
-        this.timeout = t * 60 * 1000;
-      } else if (units === TimeUnit.Hours) {
-        this.timeout = t * 3600 * 1000;
-      } else if (units === TimeUnit.Days) {
-        this.timeout = t * 24 * 3600 * 1000;
-      }
-    } else if (enable === false) {
+  setTimeout(...args: any[]): this {
+    //   enable: boolean,
+    //   val: NumberAsString | Integer | undefined,
+    //   units: TimeUnit = TimeUnit.Milliseconds
+    // ): this {
+    if (isPosInteger(args[0])) {
+      this.timeout = args[0];
+    } else if (args[0] === true && args.length >= 3) {
+      const t = asInt(args[1]);
+      const units: TimeUnit = args[2];
+      this.timeout = t * TimeUnitMultiplier[units];
+    } else {
       this.timeout = 0;
     }
     return this;
@@ -169,28 +166,66 @@ export class FanControlParams {
   }
 
   shouldSetSpeed(): boolean {
-    return !this.shouldTurnOff() && isFanSpeed6Speed(this.speed) && this.speed > 0;
+    return !this.shouldTurnOff() && this._setSpeed && isFanSpeed6Speed(this.speed) && this.speed > 0;
   }
 
   shouldTurnOff(): boolean {
     return this.service === 'turn_off';
   }
+
   shouldTurnOn(): boolean {
-    return this.service === 'turn_on' || this.speed > 0;
+    return this.service === 'turn_on' || this.shouldSetSpeed();
   }
 
   shouldTimeout(): boolean {
     return this.shouldTurnOn() && this.timeout > 0;
   }
 
-  toString() {
+  applyInstanceConfig(props: Dict): this {
+    this.applyProperties(props);
+    this.setSpeed(props.setSpeed, props.speed);
+    if (isBoolean(props.timeoutEnabled)) {
+      this.setTimeout(props.timeoutEnabled, props.for, props.forUnits);
+    }
+    return this;
+  }
+
+  applyMessagePayload(props: Dict): this {
+    this.applyProperties(props);
+    if (isPosInteger(props.speed)) {
+      this.setSpeed(true, props.speed);
+    }
+    if (isPosInteger(props.timeout)) {
+      this.setTimeout(true, props.timeout, TimeUnit.Milliseconds);
+    }
+    return this;
+  }
+
+  /**
+   * Called to apply the properties of the fan-control instance's settings and
+   * the message payload settings.
+   * @param props Could either be a FanControlNodeConfig or FanControlPayload
+   * object
+   * @returns this
+   */
+  applyProperties(props: Dict): this {
+    this.setServer(props.server)
+      .setDebug(props.debugEnabled)
+      .setFan(props.fan)
+      .setInstruction(props.instruction)
+      .setShutoff(props.shutOffEntityId)
+      .setDelay(props.delay);
+    return this;
+  }
+
+  toString(): string {
     let s = '';
     if (this.service === 'turn_off') {
-      s = `Turn ${this.shortId} Off`;
+      s = `Turn ${this.shortId} off`;
     } else if (this.speed > 0) {
       s = `Set ${this.shortId} speed to ${this.speed}`;
     } else if (this.service === 'turn_on') {
-      s = `Turn ${this.shortId} On`;
+      s = `Turn ${this.shortId} on`;
     }
     if (this.timeout > 0) {
       s += ` for ${durationUtil(this.timeout).format()}`;
@@ -204,6 +239,7 @@ export class FanControlParams {
       'server',
       'shortId',
       'service',
+      '_setSpeed',
       'speed',
       'timeout',
       'shutoffEntityId',
