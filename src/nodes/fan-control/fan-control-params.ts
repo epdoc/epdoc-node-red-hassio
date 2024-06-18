@@ -10,15 +10,24 @@ import {
   isNumber,
   isPosInteger,
   isString,
+  isTrue,
   pick
 } from '@epdoc/typeutil';
-import { FanControlInstruction, FanControlNodeConfig, TimeUnit, TimeUnitMultiplier } from './types';
+import {
+  FanControlInstruction,
+  FanControlNodeConfig,
+  TimeUnit,
+  TimeUnitMultiplier,
+  fanControlInstructionToSpeed
+} from './types';
 
 const REG = {
   onoff: new RegExp(/^(on|off)$/, 'i'),
   on: new RegExp(/on$/, 'i'),
-  off: new RegExp(/off$/, 'i'),
-  speed: new RegExp(/speed_[1-6]/)
+  off: new RegExp(/off$/, 'i')
+};
+const INST = {
+  speed: new RegExp(/^speed_([1-6])$/)
 };
 
 /**
@@ -94,14 +103,15 @@ export class FanControlParams {
 
   setSpeed(enable: boolean, speed: any | undefined): this {
     const sp = asInt(speed);
-    if (enable && isFanSpeed6Speed(sp)) {
+    const en = isTrue(enable);
+    if (en === true && isFanSpeed6Speed(sp)) {
       this._setSpeed = true;
       this.speed = sp;
       if (this.speed === 0) {
         this._setSpeed = false;
         return this.off();
       }
-      // } else if (enable === false) {
+      // } else if (en === false) {
       //   this.speed = 0;
     }
     return this;
@@ -129,9 +139,12 @@ export class FanControlParams {
   setInstruction(inst: FanControlInstruction): this {
     if (inst === FanControlInstruction.TurnOn || inst === FanControlInstruction.TurnOff) {
       this.service = inst;
-    } else if (REG.speed.test(inst)) {
+    } else if (INST.speed.test(inst)) {
       this.service = FanControlInstruction.TurnOn;
-      this.setSpeed(true, asInt(inst));
+      const speed = fanControlInstructionToSpeed(inst);
+      if (speed) {
+        this.setSpeed(true, speed);
+      }
     }
     return this;
   }
@@ -222,7 +235,7 @@ export class FanControlParams {
     let s = '';
     if (this.service === 'turn_off') {
       s = `Turn ${this.shortId} off`;
-    } else if (this.speed > 0) {
+    } else if (this._setSpeed && this.speed > 0) {
       s = `Set ${this.shortId} speed to ${this.speed}`;
     } else if (this.service === 'turn_on') {
       s = `Turn ${this.shortId} on`;

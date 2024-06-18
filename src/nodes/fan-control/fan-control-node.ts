@@ -4,7 +4,7 @@ import { RED } from '../globals';
 import { createControllerDependencies } from '../helpers';
 import { BaseNode } from '../types';
 import { FanController, FanControllerConstructor } from './fan-controller';
-import { FanControlNodeConfig } from './types';
+import { FanControlNodeConfig, toFanControlNodeConfig } from './types';
 
 export interface FanControlNode extends BaseNode {
   config: FanControlNodeConfig;
@@ -20,13 +20,12 @@ export interface FanControlNode extends BaseNode {
  * on/off, speed, server).
  */
 export function createFanControlNode(this: FanControlNode, config: FanControlNodeConfig) {
-  console.log(`Creating fan-control node with config: ${JSON.stringify(config)}`);
-
   // @ts-ignore Initialize the features shared by all nodes
   RED.nodes.createNode(this, config);
   this.config = config;
   // @ts-ignore
   let node: FanControlNode = this as FanControlNode;
+  node.log(`Creating instance with config: ${JSON.stringify(toFanControlNodeConfig(config))}`);
 
   // if (config.debugEnabled) {
   //   node.log(`fan-control config: ${JSON.stringify(toFanControlNodeConfig(config))}`);

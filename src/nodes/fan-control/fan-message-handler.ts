@@ -143,7 +143,8 @@ export class FanMessageHandler extends MessageHandler {
 
   async delayAndSetSpeed(delay: Milliseconds): Promise<void> {
     return Promise.resolve().then(async (resp) => {
-      if (delay && this.bTurnedOn && this.params.shouldSetSpeed() && !this._stop) {
+      // if (delay && this.bTurnedOn && this.params.shouldSetSpeed() && !this._stop) {
+      if (delay && this.params.shouldSetSpeed() && !this._stop) {
         return Promise.resolve()
           .then((resp) => {
             ++this.step;

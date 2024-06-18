@@ -7,7 +7,7 @@ import {
   ServicePayload
 } from '@epdoc/node-red-hautil';
 import { Milliseconds } from '@epdoc/timeutil';
-import { isDict, isNonEmptyString } from '@epdoc/typeutil';
+import { isDict } from '@epdoc/typeutil';
 import { NodeContext, NodeContextData, NodeMessage } from 'node-red';
 import { OutputControllerConstructor } from 'nodes/output-controller';
 import { Status } from '../status';
@@ -39,7 +39,7 @@ export type FanControlPayload = {
   debugEnabled?: boolean;
 };
 export function isFanControlPayload(val: any): val is FanControlPayload {
-  return isDict(val) && isNonEmptyString(val.fan);
+  return isDict(val);
 }
 type FanControlLogFunctions = {
   debug: NodeRedLogFunction;
@@ -107,13 +107,20 @@ export class FanController {
     let params: FanControlParams = new FanControlParams();
     params.applyInstanceConfig(this._node.config);
 
+    if (params.debugEnabled) {
+      this._node.log(`Config params: ${JSON.stringify(this._node.config)}`);
+      this._node.log(`Config params: ${JSON.stringify(params.toData())}`);
+    }
     // Apply our message properties to params
     if (isFanControlPayload(msg.payload)) {
+      this._node.log(`Message payload: ${JSON.stringify(msg.payload)}`);
       params.applyMessagePayload(msg.payload);
+    } else {
+      this._node.error('Invalid message payload');
     }
 
     if (params.debugEnabled) {
-      this._node.log(`Input params: ${JSON.stringify(params.toData())}`);
+      this._node.log(`Message params: ${JSON.stringify(params.toData())}`);
     }
 
     // Create and manage a handler for this message

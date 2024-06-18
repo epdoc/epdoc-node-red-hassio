@@ -161,17 +161,17 @@ RED.nodes.registerType('fan-control', {
     $('#node-input-setSpeed').on('change', (event, type, value) => {
       // this.label();
       if (value === 'true') {
-        $('.node-wrapper-speed').prop('disabled', false);
+        $('.node-wrapper-speed').show();
       } else if (value === 'false') {
-        $('.node-wrapper-speed').prop('disabled', true);
+        $('.node-wrapper-speed').hide();
       }
     });
     $('#node-input-timeoutEnabled').on('change', (event, type, value) => {
       // this.label();
       if (value === 'true') {
-        $('.node-wrapper-timeout').prop('disabled', false);
+        $('.node-wrapper-timeout').show();
       } else if (value === 'false') {
-        $('.node-wrapper-timeout').prop('disabled', true);
+        $('.node-wrapper-timeout').hide();
       }
     });
   }

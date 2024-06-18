@@ -33,8 +33,10 @@
     <label for="node-input-setSpeed">Then</label>
     <input type="text" id="node-input-setSpeed" style="width: 30%">
     <input type="hidden" id="node-input-setSpeed-type">
-    <input type="text" id="node-input-speed" style="width: 20%" class="node-wrapper-speed">
-    <input type="hidden" id="node-input-speed-type" class="node-wrapper-speed">
+    <div class="node-wrapper-speed">
+      <input type="text" id="node-input-speed" style="width: 20%">
+      <input type="hidden" id="node-input-speed-type">
+    </div>
   </div>
 </div>
 
@@ -43,10 +45,12 @@
     <label>Then</label>
     <input type="text" id="node-input-timeoutEnabled" style="width: 25%" />
     <input type="hidden" id="node-input-timeoutEnabled-type" />
-    <input type="text" id="node-input-for" style="width: 20%" class="node-wrapper-timeout" />
-    <!-- <input type="text" id="node-input-for-type" /> -->
-    <input type="text" id="node-input-forUnits" style="width: 20%" class="node-wrapper-timeout" />
-    <!-- <input type="text" id="node-input-forUnits-type" /> -->
+    <div class="node-wrapper-timeout">
+      <input type="text" id="node-input-for" style="width: 20%" />
+      <!-- <input type="text" id="node-input-for-type" /> -->
+      <input type="text" id="node-input-forUnits" style="width: 20%" />
+      <!-- <input type="text" id="node-input-forUnits-type" /> -->
+    </div>
   </div>
 </div>
 

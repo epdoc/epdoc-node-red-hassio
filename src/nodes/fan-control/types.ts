@@ -1,6 +1,6 @@
-import { EntityShortId } from '@epdoc/node-red-hautil';
+import { EntityShortId, FanSpeed6Speed } from '@epdoc/node-red-hautil';
 import { Milliseconds } from '@epdoc/timeutil';
-import { Dict, Integer, isNonEmptyString, pick } from '@epdoc/typeutil';
+import { Dict, Integer, asInt, isNonEmptyString, pick } from '@epdoc/typeutil';
 import { BaseNodeConfig } from 'nodes/types';
 
 export type NumberAsString = string;
@@ -14,6 +14,21 @@ export enum FanControlInstruction {
   Speed4 = 'speed_4',
   Speed5 = 'speed_5',
   Speed6 = 'speed_6'
+}
+const INST = {
+  on: new RegExp(/^turn_on$/),
+  off: new RegExp(/^turn_off$/),
+  speed: new RegExp(/^speed_([1-6])$/)
+};
+
+export function fanControlInstructionToSpeed(val: any): FanSpeed6Speed | undefined {
+  if (isNonEmptyString(val)) {
+    const m = val.match(INST.speed);
+    if (m && m.length > 1) {
+      return asInt(m[1]);
+    }
+  }
+  return undefined;
 }
 
 /**
