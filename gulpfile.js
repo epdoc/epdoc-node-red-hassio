@@ -154,8 +154,12 @@ const copyIcons = () => {
   return src('src/**/*.svg').pipe(dest(`${destRootPath}/src`));
 };
 exports.copyIcons = copyIcons;
+const copyPackage = () => {
+  return src('package.json').pipe(dest(destRootPath));
+};
+exports.copyPackage = copyPackage;
 
-exports.copyAssetFiles = parallel(copyIcons);
+exports.copyAssetFiles = parallel(copyIcons, copyPackage);
 
-exports.buildAll = parallel(series(buildCss, buildEditorFiles), buildSourceFiles, copyIcons, cleanCss);
+exports.buildAll = parallel(series(buildCss, buildEditorFiles), buildSourceFiles, copyIcons, copyPackage, cleanCss);
 // exports.buildAll = parallel(['buildEditorFiles', 'buildSourceFiles']); //, 'copyAssetFiles']);

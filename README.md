@@ -5,7 +5,7 @@ All APIs and documentation are subject to change.**</span>
 
 Custom Nodes for Home Assistant in Node-RED
 
-## Developer Notes
+# Developer Notes
 
 [Notes on developing and installation for Node-RED](https://github.com/epdoc/node-red-hautil/blob/master/NODE-RED.md)
 
@@ -23,6 +23,32 @@ Home Assistant directly. This is because it was hard enough writing these nodes
 as is, and without proper documentation on talking to Home Assistant or
 communicating between Editor UI and underlying services, I wasn't ready to take
 on this task.
+
+# Standing up a Node-RED Instance
+
+If Node-RED isn't installed, install it and get it running as follows:
+
+```zsh
+sudo npm install -g --unsafe-perm node-red@latest
+
+cd ~/.node-red
+npm install
+
+pm2 start node-red
+pm2 stop node-red
+```
+
+You can add these scripts to package.json
+
+```json
+  "scripts": {
+    "start": "pm2 start node-red",
+    "restart": "pm2 restart node-red",
+    "stop": "pm2 stop node-red",
+    "logstart": "pm2 stop node-red && pm2 flush node-red && pm2 start node-red && pm2 log node-red",
+  }
+```  
+
 
 # Custom Nodes
 
