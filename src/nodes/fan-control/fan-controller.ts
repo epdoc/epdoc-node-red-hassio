@@ -7,7 +7,7 @@ import {
   ServicePayload
 } from '@epdoc/node-red-hautil';
 import { Milliseconds } from '@epdoc/timeutil';
-import { isDict } from '@epdoc/typeutil';
+import { isDict, isError } from '@epdoc/typeutil';
 import { NodeContext, NodeContextData, NodeMessage } from 'node-red';
 import { OutputControllerConstructor } from 'nodes/output-controller';
 import { Status } from '../status';
@@ -96,45 +96,51 @@ export class FanController {
    * switch.
    */
   async run(msg: NodeMessage, send: NodeSend, done: NodeDone): Promise<void> {
-    // Stop any previous message handlers that are running for this Node instance
-    this.handlers.forEach((handler) => {
-      handler.stop();
-    });
-    this.handlers = [];
-
-    // Create a new params object for this message and set properties from this
-    // Node instance.
-    let params: FanControlParams = new FanControlParams();
-    params.applyInstanceConfig(this._node.config);
-
-    if (params.debugEnabled) {
-      this._node.log(`Config params: ${JSON.stringify(this._node.config)}`);
-      this._node.log(`Config params: ${JSON.stringify(params.toData())}`);
-    }
-    // Apply our message properties to params
-    if (isFanControlPayload(msg.payload)) {
-      this._node.log(`Message payload: ${JSON.stringify(msg.payload)}`);
-      params.applyMessagePayload(msg.payload);
-    } else {
-      this._node.error('Invalid message payload');
-    }
-
-    if (params.debugEnabled) {
-      this._node.log(`Message params: ${JSON.stringify(params.toData())}`);
-    }
-
-    // Create and manage a handler for this message
-    let handler: FanMessageHandler = new FanMessageHandler(this._node, msg, send, done, {
-      params: params
-    });
-    this.handlers.push(handler);
-    return handler
-      .init()
-      .run()
-      .then((resp) => {
+    try {
+      // Stop any previous message handlers that are running for this Node instance
+      this.handlers.forEach((handler) => {
         handler.stop();
-        this.removeHandler(handler);
       });
+      this.handlers = [];
+
+      // Create a new params object for this message and set properties from this
+      // Node instance.
+      let params: FanControlParams = new FanControlParams();
+      params.applyInstanceConfig(this._node.config);
+
+      if (params.debugEnabled) {
+        this._node.log(`Config params: ${JSON.stringify(this._node.config)}`);
+        this._node.log(`Config params: ${JSON.stringify(params.toData())}`);
+      }
+      // Apply our message properties to params
+      if (isFanControlPayload(msg.payload)) {
+        this._node.log(`Message payload: ${JSON.stringify(msg.payload)}`);
+        params.applyMessagePayload(msg.payload);
+      } else {
+        this._node.error('Invalid message payload');
+      }
+
+      if (params.debugEnabled) {
+        this._node.log(`Message params: ${JSON.stringify(params.toData())}`);
+      }
+
+      // Create and manage a handler for this message
+      let handler: FanMessageHandler = new FanMessageHandler(this._node, msg, send, done, {
+        params: params
+      });
+      this.handlers.push(handler);
+      return handler
+        .init()
+        .run()
+        .then((resp) => {
+          handler.stop();
+          this.removeHandler(handler);
+        });
+    } catch (err) {
+      if (isError(err)) {
+        this._node.log(`fan-control node error while processing message : ${err.message}`);
+      }
+    }
   }
 
   /**
