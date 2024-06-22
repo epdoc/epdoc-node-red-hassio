@@ -116,8 +116,6 @@ export class FanController {
       if (isFanControlPayload(msg.payload)) {
         this._node.log(`Message payload: ${JSON.stringify(msg.payload)}`);
         params.applyMessagePayload(msg.payload);
-      } else {
-        this._node.error('Invalid message payload');
       }
 
       if (params.debugEnabled) {

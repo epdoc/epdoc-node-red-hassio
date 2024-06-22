@@ -1,5 +1,6 @@
 const FANS = {
   master_bedroom: 'Master Bedroom',
+  master_bath: 'Master Bath',
   away_room: 'Away Room',
   living_room: 'Living Room',
   flintstone: 'Flintstone',

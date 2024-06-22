@@ -1,6 +1,6 @@
 {
   "name": "@epdoc/node-red-hassio",
-  "version": "1.1.1",
+  "version": "1.2.4",
   "description": "Node-RED code for my own Home Assistant deployment",
   "private": false,
   "main": "dist/src/index.js",
@@ -80,7 +80,7 @@
   "dependencies": {
     "@epdoc/timeutil": "^2.5.2",
     "@epdoc/typeutil": "^1.1.1",
-    "@epdoc/node-red-hautil": "1.2.16",
+    "@epdoc/node-red-hautil": "^1.3.0",
     "debug": "^4.3.5",
     "home-assistant-js-websocket": "^9.3.0",
     "node-red-contrib-home-assistant-websocket": "^0.64.0",

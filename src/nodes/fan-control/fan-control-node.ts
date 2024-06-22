@@ -3,8 +3,11 @@ import { NodeMessage } from 'node-red';
 import { RED } from '../globals';
 import { createControllerDependencies } from '../helpers';
 import { BaseNode } from '../types';
+import { FanControlParams } from './fan-control-params';
 import { FanController, FanControllerConstructor } from './fan-controller';
 import { FanControlNodeConfig, toFanControlNodeConfig } from './types';
+
+const LOG_NEW_INSTANCE = true;
 
 export interface FanControlNode extends BaseNode {
   config: FanControlNodeConfig;
@@ -25,8 +28,12 @@ export function createFanControlNode(this: FanControlNode, config: FanControlNod
   this.config = config;
   // @ts-ignore
   let node: FanControlNode = this as FanControlNode;
-  node.log(`Creating instance with config: ${JSON.stringify(toFanControlNodeConfig(config))}`);
 
+  if (LOG_NEW_INSTANCE) {
+    const paramsForComment: FanControlParams = new FanControlParams();
+    paramsForComment.applyInstanceConfig(toFanControlNodeConfig(config));
+    node.log(`Creating instance: ${paramsForComment.toString()}`);
+  }
   // if (config.debugEnabled) {
   //   node.log(`fan-control config: ${JSON.stringify(toFanControlNodeConfig(config))}`);
   // }
