@@ -1,7 +1,7 @@
-import { hautils } from '@epdoc/node-red-hautil';
+import { hautilInfo } from '@epdoc/node-red-hautil';
 import { NodeAPI } from 'node-red';
 import { setRED } from '../globals';
-import { hassio } from './../../index';
+import { hassioInfo } from './../../index';
 import { createFanControlNode } from './fan-control-node';
 
 /**
@@ -11,8 +11,8 @@ import { createFanControlNode } from './fan-control-node';
 
 module.exports = function (RED: NodeAPI) {
   setRED(RED);
-  RED.log.info(`${hassio.name()} version: ${hassio.version()}`);
-  RED.log.info(`${hautils.name()} version: ${hautils.version()}`);
-  RED.log.info(`Registering fan-control node version: ${hassio.version()}`);
+  RED.log.info(`${hassioInfo.name()} version: ${hassioInfo.version()}`);
+  RED.log.info(`${hautilInfo.name()} version: ${hautilInfo.version()}`);
+  RED.log.info(`Registering fan-control node version: ${hassioInfo.version()}`);
   RED.nodes.registerType('fan-control', createFanControlNode);
 };

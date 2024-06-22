@@ -5,7 +5,7 @@ export * from './nodes/location-history';
 export * from './nodes/ping-test/ping-context';
 import pkg from '../package.json';
 
-export const hassio = {
+export const hassioInfo = {
   name: () => {
     return pkg.name;
   },
